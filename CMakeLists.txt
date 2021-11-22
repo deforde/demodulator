@@ -3,4 +3,6 @@ project(demodulator C)
 
 add_compile_options(-Wall -Wextra -pedantic -Werror -Werror=vla)
 
-add_executable(demodulator src/main.c)
+add_executable(demodulator src/main.c src/fft.c src/plot.c src/wav.c)
+
+target_link_libraries(demodulator fftw3 m)
