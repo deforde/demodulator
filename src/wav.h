@@ -28,6 +28,13 @@ typedef struct chunk_header_t
 } chunk_header_t;
 #pragma pack(pop)
 
-bool ExtractSampleData(const char* filename, int16_t** samples, size_t* num_samples);
+typedef struct iq_data_t
+{
+    float* samples;
+    size_t num_samples;
+    uint32_t sample_rate_Hz;
+} iq_data_t;
+
+bool ExtractSampleData(const char* filename, iq_data_t* iq_data);
 
 #endif //WAV_H

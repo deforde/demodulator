@@ -4,11 +4,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-bool ExtractSampleData(const char* filename, int16_t** samples, size_t* num_samples)
+bool ExtractSampleData(const char* filename, iq_data_t* iq_data)
 {
     bool result = false;
-    *samples = NULL;
-    *num_samples = 0;
+    iq_data->samples = NULL;
+    iq_data->num_samples = 0;
+    iq_data->sample_rate_Hz = 0;
 
     FILE* fp = fopen(filename, "r");
     if(!fp) {
@@ -23,6 +24,8 @@ bool ExtractSampleData(const char* filename, int16_t** samples, size_t* num_samp
         fprintf(stderr, "Failed to read the wav file header.\n");
         return result;
     }
+
+    iq_data->sample_rate_Hz = wav_header.sample_rate_Hz;
 
     for(;;) {
         chunk_header_t chunk_header;
@@ -40,8 +43,15 @@ bool ExtractSampleData(const char* filename, int16_t** samples, size_t* num_samp
         }
 
         if(strncmp(chunk_header.chunk_name, "data", sizeof(chunk_header.chunk_name)) == 0) {
-            *samples = (int16_t*)buffer;
-            *num_samples = chunk_header.chunk_len / sizeof(int16_t);
+            const size_t num_samples = chunk_header.chunk_len / sizeof(int16_t);
+            iq_data->samples = (float*)malloc(num_samples * sizeof(float));
+
+            int16_t const* source_samples = (int16_t const*)buffer;
+            for(size_t i = 0; i < num_samples; ++i) {
+                iq_data->samples[i] = (float)source_samples[i] / INT16_MAX;
+            }
+
+            iq_data->num_samples = num_samples;
             result = true;
         }
 

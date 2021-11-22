@@ -17,7 +17,7 @@ typedef struct fft_desc_t
 
 void init_fft(fft_desc_t* fft, size_t len);
 
-bool execute_fft(fft_desc_t* fft, const int16_t* iq_buf, size_t num_samples);
+bool execute_fft(fft_desc_t* fft, const float* iq_buf, size_t num_samples);
 
 void destroy_fft(fft_desc_t* fft);
 
