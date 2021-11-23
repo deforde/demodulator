@@ -1,6 +1,8 @@
 #ifndef WAV_H
 #define WAV_H
 
+#include "iq.h"
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -27,13 +29,6 @@ typedef struct chunk_header_t
     uint32_t chunk_len;
 } chunk_header_t;
 #pragma pack(pop)
-
-typedef struct iq_data_t
-{
-    float* samples;
-    size_t num_samples;
-    uint32_t sample_rate_Hz;
-} iq_data_t;
 
 bool ExtractSampleData(const char* filename, iq_data_t* iq_data);
 

@@ -1,3 +1,4 @@
+#include "fft.h"
 #include "plot.h"
 
 #include <float.h>
@@ -6,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #define DISPLAY_WIDTH 202
 #define DISPLAY_HEIGHT 46
@@ -101,4 +103,31 @@ void plot_amplitude_spectrum(float* ampl, size_t len)
         display_grid[row_index * NUM_COLUMNS + i + Y_AXIS_LABEL_LEN] = '-';
     }
     printf("%s", display_grid);
+}
+
+void do_plotting(float complex* samples, size_t num_samples)
+{
+    const size_t fft_len = 4096;
+    size_t num_ffts = num_samples / fft_len;
+    fft_desc_t fft;
+    init_fft(&fft, fft_len);
+    float* amplitude_spectrum = (float*)malloc(sizeof(float) * fft.len);
+    for(size_t i = 0; i < num_ffts; ++i) {
+        const bool result = execute_fft(&fft, samples + i * fft_len, fft_len);
+        if(!result) {
+            break;
+        }
+
+        for(size_t i = 0; i < fft.len; ++i) {
+            amplitude_spectrum[i] = (float)(10 * log10(sqrt(fft.output[i][0] * fft.output[i][0] + fft.output[i][1] * fft.output[i][1]) + DBL_MIN));
+        }
+
+        system("clear");
+        plot_amplitude_spectrum(amplitude_spectrum, fft.len);
+
+        const struct timespec tim = { .tv_sec = 0, .tv_nsec = 100000000 };
+        nanosleep(&tim, NULL);
+    }
+    free(amplitude_spectrum);
+    destroy_fft(&fft);
 }
