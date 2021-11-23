@@ -55,6 +55,8 @@ bool ExtractSampleData(const char* filename, iq_data_t* iq_data)
             result = true;
         }
 
+        free(buffer);
+
         if (ferror(fp)) {
             fprintf(stderr, "I/O error when reading.\n");
             break;

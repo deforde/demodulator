@@ -47,6 +47,9 @@ void apply_filter_c(fir_filter_c_t* filter, uint32_t decimation_factor, const fl
 void destroy_filter_c(fir_filter_c_t* filter)
 {
     free(filter->delay_line);
+    filter->delay_line_num_samples = 0;
+    filter->num_taps = 0;
+    filter->taps = NULL;
 }
 
 void init_filter_r(fir_filter_r_t* filter, const float* const taps, size_t num_taps)
@@ -93,4 +96,7 @@ void apply_filter_r(fir_filter_r_t* filter, uint32_t decimation_factor, const fl
 void destroy_filter_r(fir_filter_r_t* filter)
 {
     free(filter->delay_line);
+    filter->delay_line_num_samples = 0;
+    filter->num_taps = 0;
+    filter->taps = NULL;
 }
