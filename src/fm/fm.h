@@ -1,9 +1,11 @@
 #ifndef FM_H
 #define FM_H
 
+#include "../iq.h"
+
 #include <complex.h>
 #include <stddef.h>
 
-void polar_discriminant(const float complex* input, size_t input_len, float** output, size_t* output_len);
+void demodulate_fm(const iq_data_t* iq_data);
 
 #endif //FM_H
