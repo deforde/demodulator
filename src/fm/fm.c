@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define PI 3.14159265359F
 
@@ -25,6 +26,10 @@ void polar_discriminant(const float complex* const input, size_t input_len, floa
 
 void demodulate_fm(const iq_data_t* const iq_data)
 {
+    if(iq_data->sample_rate_Hz != 250000) {
+        fprintf(stderr, "Source IQ data sample rate is expected to be 250kHz, not %uHz!", iq_data->sample_rate_Hz);
+    }
+
     real_data_t demodulated_data;
     demodulated_data.sample_rate_Hz = iq_data->sample_rate_Hz;
 
@@ -35,23 +40,43 @@ void demodulate_fm(const iq_data_t* const iq_data)
     fir_filter_r_t mono_audio_filter;
     init_filter_r(&mono_audio_filter, FIR_FILT_250kFS_15kPA_19kST, sizeof(FIR_FILT_250kFS_15kPA_19kST) / sizeof(*FIR_FILT_250kFS_15kPA_19kST));
 
-    uint32_t decimation_factor = 4;
-    real_data_t mono_audio_data;
-    mono_audio_data.sample_rate_Hz = demodulated_data.sample_rate_Hz / decimation_factor;
-
-    apply_filter_r(&mono_audio_filter, decimation_factor, demodulated_data.samples, demodulated_data.num_samples, &mono_audio_data.samples, &mono_audio_data.num_samples);
-    destroy_filter_r(&mono_audio_filter);
+    const uint32_t interpolation_factor = 3;
+    real_data_t upsampled_data;
+    upsampled_data.sample_rate_Hz = demodulated_data.sample_rate_Hz * interpolation_factor;
+    upsampled_data.num_samples = demodulated_data.num_samples * interpolation_factor;
+    upsampled_data.samples = (float*)malloc(upsampled_data.num_samples * sizeof(float));
+    memset(upsampled_data.samples, 0, upsampled_data.num_samples * sizeof(float));
+    for(size_t i = 0; i < upsampled_data.num_samples; i += interpolation_factor) {
+        upsampled_data.samples[i] = demodulated_data.samples[i/interpolation_factor];
+    }
 
     destroy_real_data(&demodulated_data);
+
+    const uint32_t decimation_factor = 17;
+    real_data_t mono_audio_data;
+    mono_audio_data.sample_rate_Hz = upsampled_data.sample_rate_Hz / decimation_factor;
+
+    apply_filter_r(&mono_audio_filter, decimation_factor, upsampled_data.samples, upsampled_data.num_samples, &mono_audio_data.samples, &mono_audio_data.num_samples);
+    destroy_filter_r(&mono_audio_filter);
+
+    destroy_real_data(&upsampled_data);
+
+    const size_t num_output_samples = mono_audio_data.num_samples;
+    int16_t* audio_16 = (int16_t*)malloc(num_output_samples * sizeof(int16_t));
+    for(size_t i = 0; i < num_output_samples; ++i) {
+        audio_16[i] = mono_audio_data.samples[i] * INT16_MAX;
+    }
+
+    destroy_real_data(&mono_audio_data);
 
     const char* mono_audio_out_filename = "mono_audio.bin";
     FILE* fp = fopen(mono_audio_out_filename, "wb");
     if(!fp) {
         fprintf(stderr, "Failed to open file: \"%s\"\n", mono_audio_out_filename);
     } else {
-        fwrite(mono_audio_data.samples, 1, mono_audio_data.num_samples * sizeof(float), fp);
+        fwrite(audio_16, 1, num_output_samples * sizeof(int16_t), fp);
         fclose(fp);
     }
 
-    destroy_real_data(&mono_audio_data);
+    free(audio_16);
 }

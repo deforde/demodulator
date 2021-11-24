@@ -17,6 +17,8 @@ bool ExtractSampleData(const char* filename, iq_data_t* iq_data)
         return result;
     }
 
+    size_t total_bytes_read = 0;
+
     wav_header_t wav_header;
     size_t bytes_read = fread(&wav_header, 1, sizeof(wav_header_t), fp);
     if(bytes_read != sizeof(wav_header_t)) {
@@ -27,13 +29,18 @@ bool ExtractSampleData(const char* filename, iq_data_t* iq_data)
 
     iq_data->sample_rate_Hz = wav_header.sample_rate_Hz;
 
-    for(;;) {
+    size_t total_bytes_expected = wav_header.file_size + ((uint64_t)(&wav_header.file_size) - (uint64_t)(&wav_header) + sizeof(wav_header.file_size));
+    total_bytes_read += bytes_read;
+
+    while(total_bytes_read < total_bytes_expected) {
         chunk_header_t chunk_header;
-        size_t bytes_read = fread(&chunk_header, 1, sizeof(chunk_header_t), fp);
+        bytes_read = fread(&chunk_header, 1, sizeof(chunk_header_t), fp);
         if(bytes_read != sizeof(chunk_header_t)) {
             fprintf(stderr, "Failed to read the requisite number of bytes.\n");
             break;
         }
+
+        total_bytes_read += bytes_read;
 
         uint8_t* buffer = (uint8_t*)malloc(chunk_header.chunk_len);
         bytes_read = fread(buffer, 1, chunk_header.chunk_len, fp);
@@ -41,6 +48,8 @@ bool ExtractSampleData(const char* filename, iq_data_t* iq_data)
             fprintf(stderr, "Failed to read the requisite number of bytes.\n");
             break;
         }
+
+        total_bytes_read += bytes_read;
 
         if(strncmp(chunk_header.chunk_name, "data", sizeof(chunk_header.chunk_name)) == 0) {
             const size_t num_samples = chunk_header.chunk_len / sizeof(int16_t) / 2;
