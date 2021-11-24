@@ -1,5 +1,6 @@
-#include "../audio.h"
+#include "../real.h"
 #include "../fir_filter.h"
+#include "../plot.h"
 #include "fm.h"
 
 #include <stdio.h>
@@ -24,31 +25,33 @@ void polar_discriminant(const float complex* const input, size_t input_len, floa
 
 void demodulate_fm(const iq_data_t* const iq_data)
 {
-    audio_data_t audio_data;
-    audio_data.sample_rate_Hz = iq_data->sample_rate_Hz;
+    real_data_t demodulated_data;
+    demodulated_data.sample_rate_Hz = iq_data->sample_rate_Hz;
 
-    polar_discriminant(iq_data->samples, iq_data->num_samples, &audio_data.samples, &audio_data.num_samples);
+    polar_discriminant(iq_data->samples, iq_data->num_samples, &demodulated_data.samples, &demodulated_data.num_samples);
 
-    fir_filter_r_t audio_filter;
-    init_filter_r(&audio_filter, FIR_FILT_250kFS_15kPA_19kST, sizeof(FIR_FILT_250kFS_15kPA_19kST) / sizeof(*FIR_FILT_250kFS_15kPA_19kST));
+    //do_plotting_r(demodulated_data.samples, demodulated_data.num_samples);
+
+    fir_filter_r_t mono_audio_filter;
+    init_filter_r(&mono_audio_filter, FIR_FILT_250kFS_15kPA_19kST, sizeof(FIR_FILT_250kFS_15kPA_19kST) / sizeof(*FIR_FILT_250kFS_15kPA_19kST));
 
     uint32_t decimation_factor = 4;
-    audio_data_t filtered_audio_data;
-    filtered_audio_data.sample_rate_Hz = audio_data.sample_rate_Hz / decimation_factor;
+    real_data_t mono_audio_data;
+    mono_audio_data.sample_rate_Hz = demodulated_data.sample_rate_Hz / decimation_factor;
 
-    apply_filter_r(&audio_filter, decimation_factor, audio_data.samples, audio_data.num_samples, &filtered_audio_data.samples, &filtered_audio_data.num_samples);
-    destroy_filter_r(&audio_filter);
+    apply_filter_r(&mono_audio_filter, decimation_factor, demodulated_data.samples, demodulated_data.num_samples, &mono_audio_data.samples, &mono_audio_data.num_samples);
+    destroy_filter_r(&mono_audio_filter);
 
-    destroy_audio_data(&audio_data);
+    destroy_real_data(&demodulated_data);
 
-    const char* audio_out_filename = "audio.bin";
-    FILE* fp = fopen(audio_out_filename, "wb");
+    const char* mono_audio_out_filename = "mono_audio.bin";
+    FILE* fp = fopen(mono_audio_out_filename, "wb");
     if(!fp) {
-        fprintf(stderr, "Failed to open file: \"%s\"\n", audio_out_filename);
+        fprintf(stderr, "Failed to open file: \"%s\"\n", mono_audio_out_filename);
     } else {
-        fwrite(filtered_audio_data.samples, 1, filtered_audio_data.num_samples * sizeof(float), fp);
+        fwrite(mono_audio_data.samples, 1, mono_audio_data.num_samples * sizeof(float), fp);
         fclose(fp);
     }
 
-    destroy_audio_data(&filtered_audio_data);
+    destroy_real_data(&mono_audio_data);
 }

@@ -105,15 +105,21 @@ void plot_amplitude_spectrum(float* ampl, size_t len)
     printf("%s", display_grid);
 }
 
-void do_plotting(float complex* samples, size_t num_samples)
+void do_plotting_c(float complex* samples, size_t num_samples)
 {
     const size_t fft_len = 4096;
-    size_t num_ffts = num_samples / fft_len;
-    fft_desc_t fft;
-    init_fft(&fft, fft_len);
+
+    if(num_samples < fft_len) {
+        fprintf(stderr, "Number of samples (%lu) is less than the FFT length (%lu), cannot plot amplitude spectrum.", num_samples, fft_len);
+        return;
+    }
+
+    const size_t num_ffts = num_samples / fft_len;
+    fft_desc_c_t fft;
+    init_fft_c(&fft, fft_len);
     float* amplitude_spectrum = (float*)malloc(sizeof(float) * fft.len);
     for(size_t i = 0; i < num_ffts; ++i) {
-        const bool result = execute_fft(&fft, samples + i * fft_len, fft_len);
+        const bool result = execute_fft_c(&fft, samples + i * fft_len, fft_len);
         if(!result) {
             break;
         }
@@ -129,5 +135,39 @@ void do_plotting(float complex* samples, size_t num_samples)
         nanosleep(&tim, NULL);
     }
     free(amplitude_spectrum);
-    destroy_fft(&fft);
+    destroy_fft_c(&fft);
+}
+
+void do_plotting_r(float* const samples, size_t num_samples)
+{
+    const size_t fft_len = 4096;
+
+    if(num_samples < fft_len) {
+        fprintf(stderr, "Number of samples (%lu) is less than the FFT length (%lu), cannot plot amplitude spectrum.", num_samples, fft_len);
+        return;
+    }
+
+    const size_t num_ffts = num_samples / fft_len;
+    fft_desc_r_t fft;
+    init_fft_r(&fft, fft_len);
+    const size_t num_output_bins = fft.len / 2 + 1;
+    float* amplitude_spectrum = (float*)malloc(sizeof(float) * num_output_bins);
+    for(size_t i = 0; i < num_ffts; ++i) {
+        const bool result = execute_fft_r(&fft, samples + i * fft_len, fft_len);
+        if(!result) {
+            break;
+        }
+
+        for(size_t i = 0; i < num_output_bins; ++i) {
+            amplitude_spectrum[i] = (float)(10 * log10(sqrt(fft.output[i][0] * fft.output[i][0] + fft.output[i][1] * fft.output[i][1]) + DBL_MIN));
+        }
+
+        system("clear");
+        plot_amplitude_spectrum(amplitude_spectrum, num_output_bins);
+
+        const struct timespec tim = { .tv_sec = 0, .tv_nsec = 100000000 };
+        nanosleep(&tim, NULL);
+    }
+    free(amplitude_spectrum);
+    destroy_fft_r(&fft);
 }
