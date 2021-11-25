@@ -8,7 +8,7 @@
 #include <stdint.h>
 
 #pragma pack(push, 1)
-typedef struct wav_header_t
+typedef struct
 {
     char riff[4];
     uint32_t file_size;
@@ -23,7 +23,7 @@ typedef struct wav_header_t
     uint16_t bits_per_sample;
 } wav_header_t;
 
-typedef struct chunk_header_t
+typedef struct
 {
     char chunk_name[4];
     uint32_t chunk_len;

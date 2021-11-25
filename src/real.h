@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-typedef struct real_data_t
+typedef struct
 {
     float* samples;
     size_t num_samples;

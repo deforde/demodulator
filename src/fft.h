@@ -8,7 +8,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-typedef struct fft_desc_c_t
+typedef struct
 {
     size_t len;
     fftw_complex* output;
@@ -16,7 +16,7 @@ typedef struct fft_desc_c_t
     fftw_complex* scratch;
 } fft_desc_c_t;
 
-typedef struct fft_desc_r_t
+typedef struct
 {
     size_t len;
     double* input;

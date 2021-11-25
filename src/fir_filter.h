@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-typedef struct fir_filter_r_t
+typedef struct
 {
     const float* taps;
     size_t num_taps;
@@ -13,7 +13,7 @@ typedef struct fir_filter_r_t
     size_t delay_line_num_samples;
 } fir_filter_r_t;
 
-typedef struct fir_filter_c_t
+typedef struct
 {
     const float* taps;
     size_t num_taps;

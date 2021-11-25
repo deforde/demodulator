@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-typedef struct iq_data_t
+typedef struct
 {
     float complex* samples;
     size_t num_samples;
