@@ -98,8 +98,8 @@ void plot_amplitude_spectrum(float* ampl, size_t len)
     }
     display_grid[DISPLAY_HEIGHT * NUM_COLUMNS] = 0;
     for(size_t i = 0; i < DISPLAY_WIDTH; ++i) {
-        const uint32_t ampl = discretised_data[i];
-        const size_t row_index = DISPLAY_HEIGHT - 1 - ampl;
+        const uint32_t discretised_ampl = discretised_data[i];
+        const size_t row_index = DISPLAY_HEIGHT - 1 - discretised_ampl;
         display_grid[row_index * NUM_COLUMNS + i + Y_AXIS_LABEL_LEN] = '-';
     }
     printf("%s", display_grid);
