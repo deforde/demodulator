@@ -1,10 +1,10 @@
 #ifndef WORKER_H
 #define WORKER_H
 
+#include <stdbool.h>
+
 #include "interconnect.h"
 #include "thread.h"
-
-#include <stdbool.h>
 
 typedef struct {
     thread_t thread;

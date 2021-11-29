@@ -1,11 +1,11 @@
 #include "wav.h"
 
-#include "../types/iq.h"
-
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "../types/iq.h"
 
 #pragma pack(push, 1)
 typedef struct
@@ -96,7 +96,7 @@ void* extract_sample_data(void* args)
 
                 int16_t const* source_samples = (int16_t const*)buffer;
                 for(size_t i = 0; i < num_samples; ++i) {
-                    iq_data->samples[i] = (float)source_samples[i*2] / INT16_MAX + I * (float)source_samples[i*2 + 1] / INT16_MAX;
+                    iq_data->samples[i] = (float)source_samples[i * 2] / INT16_MAX + I * (float)source_samples[i * 2 + 1] / INT16_MAX;
                 }
 
                 iq_data->num_samples = num_samples;
@@ -111,11 +111,11 @@ void* extract_sample_data(void* args)
             total_bytes_read += chunk_header.chunk_len;
         }
 
-        if (ferror(fp)) {
+        if(ferror(fp)) {
             fprintf(stderr, "I/O error when reading.\n");
             break;
         }
-        if (feof(fp)) {
+        if(feof(fp)) {
             printf("End of file reached successfully.\n");
             break;
         }

@@ -28,7 +28,7 @@ void apply_filter_c(fir_filter_c_t* filter, uint32_t decimation_factor, const fl
         const int64_t input_start_index = -delay_line_num_samples + output_index * decimation_factor;
         const int64_t input_end_index = input_start_index + num_taps;
         size_t filter_index = 0;
-        output_buf[output_index] = 0.0F + 0.0F*I;
+        output_buf[output_index] = 0.0F + 0.0F * I;
         for(int64_t input_index = input_start_index; input_index != input_end_index; ++input_index) {
             if(input_index < 0) {
                 const size_t delay_line_index = input_index + delay_line_num_samples;

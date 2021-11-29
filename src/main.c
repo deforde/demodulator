@@ -1,8 +1,8 @@
-#include "io/wav.h"
-#include "fm/fm.h"
-
 #include <stdlib.h>
 #include <string.h>
+
+#include "fm/fm.h"
+#include "io/wav.h"
 
 int main()
 {

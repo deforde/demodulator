@@ -1,4 +1,4 @@
-#include "../dsp/fft.h"
+#include "../dsp/fft.h" //Needs to be included before complex.h to ensure that fftw_complex is defined
 #include "plot.h"
 
 #include <float.h>

@@ -1,10 +1,10 @@
 #ifndef FM_H
 #define FM_H
 
-#include "../dsp/fir_filter.h"
-#include "../concurrency/worker.h"
-
 #include <complex.h>
+
+#include "../concurrency/worker.h"
+#include "../dsp/fir_filter.h"
 
 typedef struct
 {

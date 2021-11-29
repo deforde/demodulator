@@ -1,7 +1,7 @@
 #ifndef FFT_H
 #define FFT_H
 
-#include <fftw3.h>
+#include <fftw3.h>  //Needs to be included before complex.h to ensure that fftw_complex is defined
 
 #include <complex.h>
 #include <stdbool.h>

@@ -1,5 +1,3 @@
-#include "../types/iq.h"
-#include "../types/real.h"
 #include "fm.h"
 
 #include <float.h>
@@ -8,6 +6,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "../types/iq.h"
+#include "../types/real.h"
 
 #define PI 3.14159265359F
 
@@ -102,7 +103,7 @@ void extract_mono_audio(const real_data_t* const demodulated_data, fir_filter_r_
     upsampled_data.samples = (float*)malloc(upsampled_data.num_samples * sizeof(float));
     memset(upsampled_data.samples, 0, upsampled_data.num_samples * sizeof(float));
     for(size_t i = 0; i < upsampled_data.num_samples; i += interpolation_factor) {
-        upsampled_data.samples[i] = demodulated_data->samples[i/interpolation_factor];
+        upsampled_data.samples[i] = demodulated_data->samples[i / interpolation_factor];
     }
 
     // Decimate by 17 in order to arrive at the final output sample rate of 44.1kHz
@@ -178,7 +179,7 @@ void* demodulate_fm(void* args)
 
 void init_fm_demod(fm_demod_t* demod, interconnect_t* output)
 {
-    demod->polar_discrim_prev_sample = 0.0F + 0.0F*I;
+    demod->polar_discrim_prev_sample = 0.0F + 0.0F * I;
     demod->prev_deemph_input = 0.0F;
     demod->prev_deemph_output = 0.0F;
 
