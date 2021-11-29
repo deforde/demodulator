@@ -42,6 +42,7 @@ void apply_filter_c(fir_filter_c_t* filter, uint32_t decimation_factor, const fl
     }
 
     memcpy(delay_line, &input[input_len - num_taps + 1], (num_taps - 1) * sizeof(float complex));
+    filter->delay_line_num_samples = num_taps - 1;
 }
 
 void destroy_filter_c(fir_filter_c_t* filter)
@@ -91,6 +92,7 @@ void apply_filter_r(fir_filter_r_t* filter, uint32_t decimation_factor, const fl
     }
 
     memcpy(delay_line, &input[input_len - num_taps + 1], (num_taps - 1) * sizeof(float));
+    filter->delay_line_num_samples = num_taps - 1;
 }
 
 void destroy_filter_r(fir_filter_r_t* filter)

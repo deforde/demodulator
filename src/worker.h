@@ -4,6 +4,8 @@
 #include "interconnect.h"
 #include "thread.h"
 
+#include <stdbool.h>
+
 typedef struct {
     thread_t thread;
     interconnect_t input;
@@ -18,7 +20,7 @@ void destroy_worker(worker_t* worker);
 void start_worker(worker_t* worker);
 void join_worker(worker_t* worker);
 
-void read_input(worker_t* worker, void** data);
-void send_output(worker_t* worker, void** data);
+bool worker_read_input(worker_t* worker, void** data);
+void worker_send_output(worker_t* worker, void** data);
 
 #endif //WORKER_H

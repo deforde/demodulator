@@ -2,6 +2,7 @@
 
 #include "iq.h"
 
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -40,36 +41,52 @@ void* extract_sample_data(void* args)
 
         total_bytes_read += bytes_read;
 
-        uint8_t* buffer = (uint8_t*)malloc(chunk_header.chunk_len);
-        bytes_read = fread(buffer, 1, chunk_header.chunk_len, fp);
-        if(bytes_read != chunk_header.chunk_len) {
-            fprintf(stderr, "Failed to read the requisite number of bytes.\n");
-            break;
-        }
-
-        total_bytes_read += bytes_read;
-
         if(strncmp(chunk_header.chunk_name, "data", sizeof(chunk_header.chunk_name)) == 0) {
-            void* iq_struct_buf = malloc(sizeof(iq_data_t));
-            iq_data_t* iq_data = (iq_data_t*)iq_struct_buf;
-            iq_data->samples = NULL;
-            iq_data->num_samples = 0;
-            iq_data->sample_rate_Hz = wav_header.sample_rate_Hz;
+            static const size_t sub_chunk_num_samples = 16388; //TODO: Bit of a hack here, at the moment this needs to be an integer multiple of the decimation factor applied in the FM demodulator due to lack of sample history being maintained there
+            static const size_t sample_size = sizeof(int16_t) * 2;
+            static const size_t sub_chunk_size = sub_chunk_num_samples * sample_size;
 
-            const size_t num_samples = chunk_header.chunk_len / sizeof(int16_t) / 2;
-            iq_data->samples = (float complex*)malloc(num_samples * sizeof(*iq_data->samples));
+            const size_t num_sub_chunks = (size_t)ceilf((float)chunk_header.chunk_len / sub_chunk_size);
+            size_t chunk_data_remaining = chunk_header.chunk_len;
 
-            int16_t const* source_samples = (int16_t const*)buffer;
-            for(size_t i = 0; i < num_samples; ++i) {
-                iq_data->samples[i] = (float)source_samples[i*2] / INT16_MAX + I * (float)source_samples[i*2 + 1] / INT16_MAX;
+            for(size_t i = 0; i < num_sub_chunks; ++i) {
+                const size_t size_to_read = chunk_data_remaining < sub_chunk_size ? chunk_data_remaining : sub_chunk_size;
+
+                uint8_t* buffer = (uint8_t*)malloc(size_to_read);
+                bytes_read = fread(buffer, 1, size_to_read, fp);
+                if(bytes_read != size_to_read) {
+                    fprintf(stderr, "Failed to read the requisite number of bytes.\n");
+                    break;
+                }
+
+                total_bytes_read += bytes_read;
+                chunk_data_remaining -= size_to_read;
+
+                void* iq_struct_buf = malloc(sizeof(iq_data_t));
+                iq_data_t* iq_data = (iq_data_t*)iq_struct_buf;
+                iq_data->samples = NULL;
+                iq_data->num_samples = 0;
+                iq_data->sample_rate_Hz = wav_header.sample_rate_Hz;
+
+                const size_t num_samples = bytes_read / sample_size;
+                iq_data->samples = (float complex*)malloc(num_samples * sizeof(*iq_data->samples));
+
+                int16_t const* source_samples = (int16_t const*)buffer;
+                for(size_t i = 0; i < num_samples; ++i) {
+                    iq_data->samples[i] = (float)source_samples[i*2] / INT16_MAX + I * (float)source_samples[i*2 + 1] / INT16_MAX;
+                }
+
+                iq_data->num_samples = num_samples;
+
+                worker_send_output(worker, &iq_struct_buf);
+
+                free(buffer);
             }
-
-            iq_data->num_samples = num_samples;
-
-            send_output(worker, &iq_struct_buf);
         }
-
-        free(buffer);
+        else {
+            fseek(fp, chunk_header.chunk_len, SEEK_CUR);
+            total_bytes_read += chunk_header.chunk_len;
+        }
 
         if (ferror(fp)) {
             fprintf(stderr, "I/O error when reading.\n");

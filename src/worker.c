@@ -21,56 +21,134 @@ void start_worker(worker_t* worker)
 void join_worker(worker_t* worker)
 {
     join_thread(&worker->thread);
+    if(worker->output) {
+        interconnect_close(worker->output);
+    }
 }
 
 void wait_input(worker_t* worker)
 {
-    wait(&worker->input);
+    interconnect_wait(&worker->input);
 }
 
 void signal_output(worker_t* worker)
 {
-    if(worker->output != NULL) {
-        signal(worker->output);
-    }
+    interconnect_signal(worker->output);
+}
+
+void wait_output(worker_t* worker)
+{
+    interconnect_wait(worker->output);
+}
+
+void signal_input(worker_t* worker)
+{
+    interconnect_signal(&worker->input);
 }
 
 void lock_input(worker_t* worker)
 {
-    lock_read(&worker->input);
+    interconnect_lock(&worker->input);
 }
 
 void unlock_input(worker_t* worker)
 {
-    unlock_rw(&worker->input);
+    interconnect_unlock(&worker->input);
 }
 
 void lock_output(worker_t* worker)
 {
-    if(worker->output != NULL) {
-        lock_write(worker->output);
-    }
+    interconnect_lock(worker->output);
 }
 
 void unlock_output(worker_t* worker)
 {
-    if(worker->output != NULL) {
-        unlock_rw(worker->output);
-    }
+    interconnect_unlock(worker->output);
 }
 
-void read_input(worker_t* worker, void** data)
+bool worker_read_input(worker_t* worker, void** data)
 {
-    wait_input(worker);
+    bool input_open = false;
+    bool data_available = false;
+    *data = NULL;
+
     lock_input(worker);
-    *data = worker->input.data;
+
+    // If the input is closed no new data is ever going to be received, so return false
+    input_open = worker->input.open;
+    if(!input_open) {
+        unlock_input(worker);
+        return input_open;
+    }
+
+    // Check whether the input has already indicated that new data is available
+    data_available = worker->input.available;
+    if(data_available) {
+        worker->input.ready = true;
+        worker->input.available = false;
+        *data = worker->input.data;
+        unlock_input(worker);
+        // Let the input know that we are ready to receive new data
+        signal_input(worker);
+        return input_open;
+    }
+
+    // If the there is no new data on the input, then wait to be signalled
+    while(!data_available) {
+        wait_input(worker);
+        input_open = worker->input.open;
+        if(!input_open) {
+            unlock_input(worker);
+            return input_open;
+        }
+       data_available = worker->input.available;
+        if(data_available) {
+            worker->input.ready = true;
+            worker->input.available = false;
+            *data = worker->input.data;
+        }
+    }
+
     unlock_input(worker);
+    // Let the input know that we are ready to receive new data
+    signal_input(worker);
+
+    return input_open;
 }
 
-void send_output(worker_t* worker, void** data)
+void worker_send_output(worker_t* worker, void** data)
 {
+    if(worker->output == NULL) {
+        return;
+    }
+
+    bool output_ready = false;
+
+    // Check whether the output has already indicated that it is ready to receive data
     lock_output(worker);
-    worker->output->data = *data;
+    output_ready = worker->output->ready;
+    if(output_ready) {
+        worker->output->ready = false;
+        worker->output->available = true;
+        worker->output->data = *data;
+        unlock_output(worker);
+        // Let the output know that new data is available
+        signal_output(worker);
+        return;
+    }
+
+    // If the output is not ready to receive data, then wait to be signalled
+    while(!output_ready) {
+        wait_output(worker);
+        output_ready = worker->output->ready;
+        if(output_ready) {
+            worker->output->ready = false;
+            worker->output->available = true;
+            worker->output->data = *data;
+        }
+    }
+
     unlock_output(worker);
+    // Let the output know that new data is available
     signal_output(worker);
 }

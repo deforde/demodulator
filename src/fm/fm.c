@@ -130,42 +130,49 @@ void* demodulate_fm(void* args)
     float* prev_deemph_input = &demod->prev_deemph_input;
     float* prev_deemph_output = &demod->prev_deemph_output;
 
-    iq_data_t* iq_data;
+    bool running = true;
+    while(running) {
+        iq_data_t* iq_data;
 
-    read_input(worker, (void**)&iq_data);
+        running = worker_read_input(worker, (void**)&iq_data);
 
-    if(iq_data->sample_rate_Hz != 250000) {
-        fprintf(stderr, "Source IQ data sample rate is expected to be 250kHz, not %uHz!", iq_data->sample_rate_Hz); //TODO: Handle arbitrary input sample rates
+        if(!running) {
+            break;
+        }
+
+        if(iq_data->sample_rate_Hz != 250000) {
+            fprintf(stderr, "Source IQ data sample rate is expected to be 250kHz, not %uHz!", iq_data->sample_rate_Hz); //TODO: Handle arbitrary input sample rates
+        }
+
+        // Filter the source IQ data using a LPF with a 100kHz cut-off
+        iq_data_t filtered_iq_data;
+        filtered_iq_data.sample_rate_Hz = iq_data->sample_rate_Hz;
+        apply_filter_c(input_filter, 1, iq_data->samples, iq_data->num_samples, &filtered_iq_data.samples, &filtered_iq_data.num_samples);
+
+        destroy_iq_data(iq_data);
+        free(iq_data);
+
+        // Demodulate the FM signal
+        real_data_t demodulated_data;
+        demodulated_data.sample_rate_Hz = filtered_iq_data.sample_rate_Hz;
+        polar_discriminant(filtered_iq_data.samples, filtered_iq_data.num_samples, &demodulated_data.samples, &demodulated_data.num_samples, polar_discrim_prev_sample);
+
+        destroy_iq_data(&filtered_iq_data);
+
+        // Extract the mono audio data
+        float* mono_audio = NULL;
+        size_t num_mono_samples = 0;
+        extract_mono_audio(&demodulated_data, audio_filter, &mono_audio, &num_mono_samples, prev_deemph_input, prev_deemph_output);
+
+        destroy_real_data(&demodulated_data);
+
+        int16_t* mono_audio_16 = (int16_t*)malloc(num_mono_samples * sizeof(int16_t));
+        convert_data_ftos(mono_audio, mono_audio_16, num_mono_samples);
+        free(mono_audio);
+
+        write_data_to_file(mono_audio_16, num_mono_samples * sizeof(int16_t), "mono_audio.bin");
+        free(mono_audio_16);
     }
-
-    // Filter the source IQ data using a LPF with a 100kHz cut-off
-    iq_data_t filtered_iq_data;
-    filtered_iq_data.sample_rate_Hz = iq_data->sample_rate_Hz;
-    apply_filter_c(input_filter, 1, iq_data->samples, iq_data->num_samples, &filtered_iq_data.samples, &filtered_iq_data.num_samples);
-
-    destroy_iq_data(iq_data);
-    free(iq_data);
-
-    // Demodulate the FM signal
-    real_data_t demodulated_data;
-    demodulated_data.sample_rate_Hz = filtered_iq_data.sample_rate_Hz;
-    polar_discriminant(filtered_iq_data.samples, filtered_iq_data.num_samples, &demodulated_data.samples, &demodulated_data.num_samples, polar_discrim_prev_sample);
-
-    destroy_iq_data(&filtered_iq_data);
-
-    // Extract the mono audio data
-    float* mono_audio = NULL;
-    size_t num_mono_samples = 0;
-    extract_mono_audio(&demodulated_data, audio_filter, &mono_audio, &num_mono_samples, prev_deemph_input, prev_deemph_output);
-
-    destroy_real_data(&demodulated_data);
-
-    int16_t* mono_audio_16 = (int16_t*)malloc(num_mono_samples * sizeof(int16_t));
-    convert_data_ftos(mono_audio, mono_audio_16, num_mono_samples);
-    free(mono_audio);
-
-    write_data_to_file(mono_audio_16, num_mono_samples * sizeof(int16_t), "mono_audio.bin");
-    free(mono_audio_16);
 
     return NULL;
 }

@@ -1,14 +1,6 @@
-#include "real.h"
-#include "fft.h"
-#include "fir_filter.h"
-#include "fm/fm.h"
-#include "iq.h"
-#include "plot.h"
 #include "wav.h"
+#include "fm/fm.h"
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 

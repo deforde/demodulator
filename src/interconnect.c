@@ -2,39 +2,48 @@
 
 void init_interconnect(interconnect_t* const interconnect)
 {
-    pthread_rwlock_init(&interconnect->rw_lock, NULL);
+    interconnect->open = true;
+    interconnect->ready = true;
+    interconnect->available = false;
+
     pthread_cond_init(&interconnect->cond, NULL);
     pthread_mutex_init(&interconnect->mx, NULL);
 }
 
 void destroy_interconnect(interconnect_t* const interconnect)
 {
-    pthread_rwlock_destroy(&interconnect->rw_lock);
+    interconnect->open = false;
+    interconnect->ready = false;
+    interconnect->available = false;
+
     pthread_cond_destroy(&interconnect->cond);
     pthread_mutex_destroy(&interconnect->mx);
 }
 
-void lock_read(interconnect_t* const interconnect)
+void interconnect_lock(interconnect_t* const interconnect)
 {
-    pthread_rwlock_rdlock(&interconnect->rw_lock);
+    pthread_mutex_lock(&interconnect->mx);
 }
 
-void lock_write(interconnect_t* const interconnect)
+void interconnect_unlock(interconnect_t* const interconnect)
 {
-    pthread_rwlock_wrlock(&interconnect->rw_lock);
+    pthread_mutex_unlock(&interconnect->mx);
 }
 
-void unlock_rw(interconnect_t* const interconnect)
-{
-    pthread_rwlock_unlock(&interconnect->rw_lock);
-}
-
-void wait(interconnect_t* const interconnect)
+void interconnect_wait(interconnect_t* const interconnect)
 {
     pthread_cond_wait(&interconnect->cond, &interconnect->mx);
 }
 
-void signal(interconnect_t* const interconnect)
+void interconnect_signal(interconnect_t* const interconnect)
 {
     pthread_cond_signal(&interconnect->cond);
+}
+
+void interconnect_close(interconnect_t* interconnect)
+{
+    interconnect_lock(interconnect);
+    interconnect->open = false;
+    interconnect_unlock(interconnect);
+    interconnect_signal(interconnect);
 }
