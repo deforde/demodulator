@@ -68,18 +68,11 @@ void unlock_output(worker_t* worker)
 
 bool worker_read_input(worker_t* worker, void** data)
 {
-    bool input_open = false;
+    bool input_open = true;
     bool data_available = false;
     *data = NULL;
 
     lock_input(worker);
-
-    // If the input is closed no new data is ever going to be received, so return false
-    input_open = worker->input.open;
-    if(!input_open) {
-        unlock_input(worker);
-        return input_open;
-    }
 
     // Check whether the input has already indicated that new data is available
     data_available = worker->input.available;
@@ -93,19 +86,26 @@ bool worker_read_input(worker_t* worker, void** data)
         return input_open;
     }
 
+    // If no new data has been received, and the input is closed, then no new data is ever going to be received, so return false
+    input_open = worker->input.open;
+    if(!input_open) {
+        unlock_input(worker);
+        return input_open;
+    }
+
     // If the there is no new data on the input, then wait to be signalled
     while(!data_available) {
         wait_input(worker);
-        input_open = worker->input.open;
-        if(!input_open) {
-            unlock_input(worker);
-            return input_open;
-        }
-       data_available = worker->input.available;
+        data_available = worker->input.available;
         if(data_available) {
             worker->input.ready = true;
             worker->input.available = false;
             *data = worker->input.data;
+        }
+        input_open = worker->input.open;
+        if(!input_open) {
+            unlock_input(worker);
+            return input_open;
         }
     }
 

@@ -1,4 +1,4 @@
-#include "wav.h"
+#include "io/wav.h"
 #include "fm/fm.h"
 
 #include <stdlib.h>

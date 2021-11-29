@@ -1,4 +1,5 @@
 target_sources(demodulator
 PRIVATE
-    main.c
+    fft.c
+    fir_filter.c
 )

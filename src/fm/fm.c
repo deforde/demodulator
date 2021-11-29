@@ -1,6 +1,5 @@
-#include "../fir_filter.h"
-#include "../iq.h"
-#include "../real.h"
+#include "../types/iq.h"
+#include "../types/real.h"
 #include "fm.h"
 
 #include <float.h>

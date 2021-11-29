@@ -1,4 +1,4 @@
-#include "fft.h"
+#include "../dsp/fft.h"
 #include "plot.h"
 
 #include <float.h>

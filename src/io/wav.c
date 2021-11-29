@@ -1,11 +1,34 @@
 #include "wav.h"
 
-#include "iq.h"
+#include "../types/iq.h"
 
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#pragma pack(push, 1)
+typedef struct
+{
+    char riff[4];
+    uint32_t file_size;
+    char wave[4];
+    char fmt[4];
+    uint32_t fmt_data_len;
+    uint16_t fmt_type;
+    uint16_t num_channels;
+    uint32_t sample_rate_Hz;
+    uint32_t bytes_per_sec;
+    uint16_t channel_bytes_per_sample;
+    uint16_t bits_per_sample;
+} wav_header_t;
+
+typedef struct
+{
+    char chunk_name[4];
+    uint32_t chunk_len;
+} chunk_header_t;
+#pragma pack(pop)
 
 void* extract_sample_data(void* args)
 {
