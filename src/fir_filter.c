@@ -8,8 +8,7 @@ void init_filter_c(fir_filter_c_t* filter, const float* const taps, size_t num_t
     filter->taps = taps;
     filter->num_taps = num_taps;
     filter->delay_line = (float complex*)malloc((num_taps - 1) * sizeof(float complex));
-    memset(filter->delay_line, 0, (num_taps - 1) * sizeof(float complex));
-    filter->delay_line_num_samples = num_taps - 1;
+    filter->delay_line_num_samples = 0;
 }
 
 void apply_filter_c(fir_filter_c_t* filter, uint32_t decimation_factor, const float complex* const input, size_t input_len, float complex** output, size_t* output_len)
@@ -58,8 +57,7 @@ void init_filter_r(fir_filter_r_t* filter, const float* const taps, size_t num_t
     filter->taps = taps;
     filter->num_taps = num_taps;
     filter->delay_line = (float*)malloc((num_taps - 1) * sizeof(float));
-    memset(filter->delay_line, 0, (num_taps - 1) * sizeof(float));
-    filter->delay_line_num_samples = num_taps - 1;
+    filter->delay_line_num_samples = 0;
 }
 
 void apply_filter_r(fir_filter_r_t* filter, uint32_t decimation_factor, const float* const input, size_t input_len, float** output, size_t* output_len)
