@@ -1,20 +1,20 @@
 #include "wav.h"
 
+#include "iq.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-bool ExtractSampleData(const char* filename, iq_data_t* iq_data)
+void* extract_sample_data(void* args)
 {
-    bool result = false;
-    iq_data->samples = NULL;
-    iq_data->num_samples = 0;
-    iq_data->sample_rate_Hz = 0;
+    wav_file_reader_t* wav_file_reader = (wav_file_reader_t*)args;
+    worker_t* worker = &wav_file_reader->worker;
 
-    FILE* fp = fopen(filename, "r");
+    FILE* fp = fopen(wav_file_reader->filename, "r");
     if(!fp) {
-        fprintf(stderr, "Failed to open file: \"%s\"\n", filename);
-        return result;
+        fprintf(stderr, "Failed to open file: \"%s\"\n", wav_file_reader->filename);
+        return NULL;
     }
 
     size_t total_bytes_read = 0;
@@ -24,10 +24,8 @@ bool ExtractSampleData(const char* filename, iq_data_t* iq_data)
     if(bytes_read != sizeof(wav_header_t)) {
         fclose(fp);
         fprintf(stderr, "Failed to read the wav file header.\n");
-        return result;
+        return NULL;
     }
-
-    iq_data->sample_rate_Hz = wav_header.sample_rate_Hz;
 
     size_t total_bytes_expected = wav_header.file_size + ((uint64_t)(&wav_header.file_size) - (uint64_t)(&wav_header) + sizeof(wav_header.file_size));
     total_bytes_read += bytes_read;
@@ -52,6 +50,12 @@ bool ExtractSampleData(const char* filename, iq_data_t* iq_data)
         total_bytes_read += bytes_read;
 
         if(strncmp(chunk_header.chunk_name, "data", sizeof(chunk_header.chunk_name)) == 0) {
+            void* iq_struct_buf = malloc(sizeof(iq_data_t));
+            iq_data_t* iq_data = (iq_data_t*)iq_struct_buf;
+            iq_data->samples = NULL;
+            iq_data->num_samples = 0;
+            iq_data->sample_rate_Hz = wav_header.sample_rate_Hz;
+
             const size_t num_samples = chunk_header.chunk_len / sizeof(int16_t) / 2;
             iq_data->samples = (float complex*)malloc(num_samples * sizeof(*iq_data->samples));
 
@@ -61,7 +65,8 @@ bool ExtractSampleData(const char* filename, iq_data_t* iq_data)
             }
 
             iq_data->num_samples = num_samples;
-            result = true;
+
+            send_output(worker, &iq_struct_buf);
         }
 
         free(buffer);
@@ -78,5 +83,16 @@ bool ExtractSampleData(const char* filename, iq_data_t* iq_data)
 
     fclose(fp);
 
-    return result;
+    return NULL;
+}
+
+void init_wav_file_reader(wav_file_reader_t* wav_file_reader, interconnect_t* output, const char** const filename)
+{
+    wav_file_reader->filename = *filename;
+    init_worker(&wav_file_reader->worker, output, extract_sample_data, wav_file_reader);
+}
+
+void destroy_wav_file_reader(wav_file_reader_t* wav_file_reader)
+{
+    destroy_worker(&wav_file_reader->worker);
 }

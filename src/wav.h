@@ -1,7 +1,7 @@
 #ifndef WAV_H
 #define WAV_H
 
-#include "iq.h"
+#include "worker.h"
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -30,6 +30,13 @@ typedef struct
 } chunk_header_t;
 #pragma pack(pop)
 
-bool ExtractSampleData(const char* filename, iq_data_t* iq_data);
+typedef struct
+{
+    const char* filename;
+    worker_t worker;
+} wav_file_reader_t;
+
+void init_wav_file_reader(wav_file_reader_t* wav_file_reader, interconnect_t* output, const char** filename);
+void destroy_wav_file_reader(wav_file_reader_t* wav_file_reader);
 
 #endif //WAV_H

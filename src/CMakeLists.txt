@@ -2,9 +2,12 @@ target_sources(demodulator
 PRIVATE
     fft.c
     fir_filter.c
+    interconnect.c
     iq.c
     main.c
     plot.c
     real.c
+    thread.c
     wav.c
+    worker.c
 )

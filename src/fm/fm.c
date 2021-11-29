@@ -1,6 +1,6 @@
-#include "../real.h"
 #include "../fir_filter.h"
-#include "../plot.h"
+#include "../iq.h"
+#include "../real.h"
 #include "fm.h"
 
 #include <float.h>
@@ -24,7 +24,7 @@ void convert_data_ftos(const float* const input, int16_t* const output, size_t l
 
 bool write_data_to_file(const void* const data, size_t size, const char* const filename)
 {
-    FILE* fp = fopen(filename, "wb");
+    FILE* fp = fopen(filename, "ab");
 
     if(!fp) {
         fprintf(stderr, "Failed to open file: \"%s\"\n", filename);
@@ -37,18 +37,7 @@ bool write_data_to_file(const void* const data, size_t size, const char* const f
     return true;
 }
 
-void normalise(float* const data, size_t len)
-{
-    float abs_max = FLT_MIN;
-    for(size_t i = 0; i < len; ++i) {
-        abs_max = fmax(fabs(data[i]), abs_max);
-    }
-    for(size_t i = 0; i < len; ++i) {
-        data[i] /= abs_max;
-    }
-}
-
-void deemphasis_filtering(const float* const input, size_t input_len, float** const output, size_t* output_len)
+void deemphasis_filtering(const float* const input, size_t input_len, float** const output, size_t* output_len, float* const prev_deemph_input, float* const prev_deemph_output)
 {
     //           w_ca         1                 1 - (-1) z^-1
     //    H(z) = ---- * ----------- * --------------------------------
@@ -81,29 +70,26 @@ void deemphasis_filtering(const float* const input, size_t input_len, float** co
     float* output_buffer = (float*)malloc(*output_len * sizeof(float));
     *output = output_buffer;
 
-    float prev_output_sample = 0.0F;
-    float prev_input_sample = 0.0F;
     for(size_t i = 0; i < *output_len; ++i) {
-        output_buffer[i] = k_1 * input[i] + k_1 * prev_input_sample - k_2 * prev_output_sample;
-        prev_input_sample = input[i];
-        prev_output_sample = output_buffer[i];
+        output_buffer[i] = k_1 * input[i] + k_1 * *prev_deemph_input - k_2 * *prev_deemph_output;
+        *prev_deemph_input = input[i];
+        *prev_deemph_output = output_buffer[i];
     }
 }
 
-void polar_discriminant(const float complex* const input, size_t input_len, float** output, size_t* output_len)
+void polar_discriminant(const float complex* const input, size_t input_len, float** output, size_t* output_len, float complex* const prev_sample)
 {
     *output_len = input_len;
     float* output_buffer = (float*)malloc(*output_len * sizeof(float));
     *output = output_buffer;
 
-    float complex prev_sample = 0.0F + 0.0F*I;
     for(size_t i = 0; i < input_len; ++i) {
-        output_buffer[i] = cargf(input[i] * conjf(prev_sample)) / PI;
-        prev_sample = input[i];
+        output_buffer[i] = cargf(input[i] * conjf(*prev_sample)) / PI;
+        *prev_sample = input[i];
     }
 }
 
-void extract_mono_audio(const real_data_t* const demodulated_data, float** const output, size_t* output_len)
+void extract_mono_audio(const real_data_t* const demodulated_data, fir_filter_r_t* const audio_filter, float** const output, size_t* output_len, float* const prev_deemph_input, float* const prev_deemph_output)
 {
     if(demodulated_data->sample_rate_Hz != 250000) {
         fprintf(stderr, "Demodulated source data sample rate is expected to be 250kHz, not %uHz!", demodulated_data->sample_rate_Hz); //TODO: Handle arbitrary input sample rates
@@ -125,20 +111,29 @@ void extract_mono_audio(const real_data_t* const demodulated_data, float** const
     real_data_t mono_audio_data;
     mono_audio_data.sample_rate_Hz = upsampled_data.sample_rate_Hz / decimation_factor;
 
-    fir_filter_r_t mono_audio_filter;
-    init_filter_r(&mono_audio_filter, FIR_FILT_250kFS_15kPA_19kST, sizeof(FIR_FILT_250kFS_15kPA_19kST) / sizeof(*FIR_FILT_250kFS_15kPA_19kST));
-    apply_filter_r(&mono_audio_filter, decimation_factor, upsampled_data.samples, upsampled_data.num_samples, &mono_audio_data.samples, &mono_audio_data.num_samples);
-    destroy_filter_r(&mono_audio_filter);
+    apply_filter_r(audio_filter, decimation_factor, upsampled_data.samples, upsampled_data.num_samples, &mono_audio_data.samples, &mono_audio_data.num_samples);
 
     destroy_real_data(&upsampled_data);
 
     // Apply deemphasis filter in order to compensate for the pre-emphasis performed on the transmit side
-    deemphasis_filtering(mono_audio_data.samples, mono_audio_data.num_samples, output, output_len);
+    deemphasis_filtering(mono_audio_data.samples, mono_audio_data.num_samples, output, output_len, prev_deemph_input, prev_deemph_output);
     destroy_real_data(&mono_audio_data);
 }
 
-void demodulate_fm(const iq_data_t* const iq_data)
+void* demodulate_fm(void* args)
 {
+    fm_demod_t* demod = (fm_demod_t*)args;
+    worker_t* worker = &demod->worker;
+    fir_filter_c_t* input_filter = &demod->input_filter;
+    fir_filter_r_t* audio_filter = &demod->audio_filter;
+    float complex* polar_discrim_prev_sample = &demod->polar_discrim_prev_sample;
+    float* prev_deemph_input = &demod->prev_deemph_input;
+    float* prev_deemph_output = &demod->prev_deemph_output;
+
+    iq_data_t* iq_data;
+
+    read_input(worker, (void**)&iq_data);
+
     if(iq_data->sample_rate_Hz != 250000) {
         fprintf(stderr, "Source IQ data sample rate is expected to be 250kHz, not %uHz!", iq_data->sample_rate_Hz); //TODO: Handle arbitrary input sample rates
     }
@@ -146,31 +141,51 @@ void demodulate_fm(const iq_data_t* const iq_data)
     // Filter the source IQ data using a LPF with a 100kHz cut-off
     iq_data_t filtered_iq_data;
     filtered_iq_data.sample_rate_Hz = iq_data->sample_rate_Hz;
+    apply_filter_c(input_filter, 1, iq_data->samples, iq_data->num_samples, &filtered_iq_data.samples, &filtered_iq_data.num_samples);
 
-    fir_filter_c_t input_filter;
-    init_filter_c(&input_filter, FIR_FILT_250kFS_100kPA_105kST, sizeof(FIR_FILT_250kFS_100kPA_105kST) / sizeof(*FIR_FILT_250kFS_100kPA_105kST));
-    apply_filter_c(&input_filter, 1, iq_data->samples, iq_data->num_samples, &filtered_iq_data.samples, &filtered_iq_data.num_samples);
-    destroy_filter_c(&input_filter);
+    destroy_iq_data(iq_data);
+    free(iq_data);
 
     // Demodulate the FM signal
     real_data_t demodulated_data;
-    demodulated_data.sample_rate_Hz = iq_data->sample_rate_Hz;
+    demodulated_data.sample_rate_Hz = filtered_iq_data.sample_rate_Hz;
+    polar_discriminant(filtered_iq_data.samples, filtered_iq_data.num_samples, &demodulated_data.samples, &demodulated_data.num_samples, polar_discrim_prev_sample);
 
-    polar_discriminant(filtered_iq_data.samples, filtered_iq_data.num_samples, &demodulated_data.samples, &demodulated_data.num_samples);
     destroy_iq_data(&filtered_iq_data);
-
-    //do_plotting_r(demodulated_data.samples, demodulated_data.num_samples);
 
     // Extract the mono audio data
     float* mono_audio = NULL;
     size_t num_mono_samples = 0;
-    extract_mono_audio(&demodulated_data, &mono_audio, &num_mono_samples);
+    extract_mono_audio(&demodulated_data, audio_filter, &mono_audio, &num_mono_samples, prev_deemph_input, prev_deemph_output);
 
     destroy_real_data(&demodulated_data);
 
     int16_t* mono_audio_16 = (int16_t*)malloc(num_mono_samples * sizeof(int16_t));
     convert_data_ftos(mono_audio, mono_audio_16, num_mono_samples);
+    free(mono_audio);
+
     write_data_to_file(mono_audio_16, num_mono_samples * sizeof(int16_t), "mono_audio.bin");
     free(mono_audio_16);
-    free(mono_audio);
+
+    return NULL;
+}
+
+void init_fm_demod(fm_demod_t* demod, interconnect_t* output)
+{
+    demod->polar_discrim_prev_sample = 0.0F + 0.0F*I;
+    demod->prev_deemph_input = 0.0F;
+    demod->prev_deemph_output = 0.0F;
+
+    init_filter_c(&demod->input_filter, FIR_FILT_250kFS_100kPA_105kST, sizeof(FIR_FILT_250kFS_100kPA_105kST) / sizeof(*FIR_FILT_250kFS_100kPA_105kST));
+    init_filter_r(&demod->audio_filter, FIR_FILT_250kFS_15kPA_19kST, sizeof(FIR_FILT_250kFS_15kPA_19kST) / sizeof(*FIR_FILT_250kFS_15kPA_19kST));
+
+    init_worker(&demod->worker, output, demodulate_fm, demod);
+}
+
+void destroy_fm_demod(fm_demod_t* demod)
+{
+    destroy_worker(&demod->worker);
+
+    destroy_filter_c(&demod->input_filter);
+    destroy_filter_r(&demod->audio_filter);
 }
