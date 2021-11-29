@@ -128,7 +128,10 @@ void do_plotting_c(float complex* samples, size_t num_samples)
             amplitude_spectrum[i] = (float)(10 * log10(sqrt(fft.output[i][0] * fft.output[i][0] + fft.output[i][1] * fft.output[i][1]) + DBL_MIN));
         }
 
-        system("clear");
+        int ret = system("clear");
+        if(ret != 0) {
+            fprintf(stderr, "system call returned: %i", ret);
+        }
         plot_amplitude_spectrum(amplitude_spectrum, fft.len);
 
         const struct timespec tim = { .tv_sec = 0, .tv_nsec = 100000000 };
@@ -162,7 +165,10 @@ void do_plotting_r(float* const samples, size_t num_samples)
             amplitude_spectrum[i] = (float)(10 * log10(sqrt(fft.output[i][0] * fft.output[i][0] + fft.output[i][1] * fft.output[i][1]) + DBL_MIN));
         }
 
-        system("clear");
+        int ret = system("clear");
+        if(ret != 0) {
+            fprintf(stderr, "system call returned: %i", ret);
+        }
         plot_amplitude_spectrum(amplitude_spectrum, num_output_bins);
 
         const struct timespec tim = { .tv_sec = 0, .tv_nsec = 100000000 };
