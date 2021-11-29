@@ -1,0 +1,10 @@
+target_sources(demodulator
+PRIVATE
+    fft.c
+    fir_filter.c
+    iq.c
+    main.c
+    plot.c
+    real.c
+    wav.c
+)
