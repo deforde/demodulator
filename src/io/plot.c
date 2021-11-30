@@ -1,13 +1,17 @@
-#include "../dsp/fft.h" //Needs to be included before complex.h to ensure that fftw_complex is defined
+#include <fftw3.h> //Needs to be included before complex.h to ensure that fftw_complex is defined
+
 #include "plot.h"
 
 #include <float.h>
 #include <math.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+
+#include "../dsp/fft.h"
 
 #define DISPLAY_WIDTH 202
 #define DISPLAY_HEIGHT 46

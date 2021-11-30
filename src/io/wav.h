@@ -1,6 +1,7 @@
 #ifndef WAV_H
 #define WAV_H
 
+#include "../concurrency/interconnect.h"
 #include "../concurrency/worker.h"
 
 typedef struct

@@ -1,5 +1,6 @@
 #include "fft.h"
 
+#include <stdio.h>
 #include <string.h>
 
 void init_fft_c(fft_desc_c_t* fft, size_t len)

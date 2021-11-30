@@ -1,5 +1,7 @@
 #include "interconnect.h"
 
+#include <stddef.h>
+
 void init_interconnect(interconnect_t* const interconnect)
 {
     interconnect->open = true;

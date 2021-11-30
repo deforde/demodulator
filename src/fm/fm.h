@@ -3,6 +3,7 @@
 
 #include <complex.h>
 
+#include "../concurrency/interconnect.h"
 #include "../concurrency/worker.h"
 #include "../dsp/fir_filter.h"
 

@@ -1,5 +1,7 @@
 #include "worker.h"
 
+#include <stddef.h>
+
 void init_worker(worker_t* const worker, interconnect_t* const output, thread_func_t func, void* thread_args)
 {
     init_interconnect(&worker->input);

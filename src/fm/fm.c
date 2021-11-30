@@ -1,12 +1,14 @@
 #include "fm.h"
 
-#include <float.h>
-#include <math.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "../concurrency/interconnect.h"
+#include "../concurrency/worker.h"
+#include "../dsp/fir_filter.h"
 #include "../types/iq.h"
 #include "../types/real.h"
 

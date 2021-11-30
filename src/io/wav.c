@@ -1,10 +1,14 @@
 #include "wav.h"
 
+#include <complex.h>
 #include <math.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "../concurrency/interconnect.h"
+#include "../concurrency/worker.h"
 #include "../types/iq.h"
 
 #pragma pack(push, 1)
