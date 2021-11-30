@@ -7,7 +7,6 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-
 typedef struct
 {
     size_t len;

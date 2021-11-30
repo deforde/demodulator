@@ -4,7 +4,6 @@
 #include "fm/fm.h"
 #include "io/wav.h"
 
-
 int main()
 {
     const char* filename = "../data/SDRuno_20200907_184033Z_88110kHz.wav";
