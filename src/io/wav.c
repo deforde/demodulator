@@ -69,7 +69,7 @@ void* extract_sample_data(void* args)
         total_bytes_read += bytes_read;
 
         if(strncmp(chunk_header.chunk_name, "data", sizeof(chunk_header.chunk_name)) == 0) {
-            static const size_t sub_chunk_num_samples = 16388; //TODO: Bit of a hack here, at the moment this needs to be an integer multiple of the decimation factor applied in the FM demodulator due to lack of sample history being maintained there
+            static const size_t sub_chunk_num_samples = 16384;
             static const size_t sample_size = sizeof(int16_t) * 2;
             static const size_t sub_chunk_size = sub_chunk_num_samples * sample_size;
 

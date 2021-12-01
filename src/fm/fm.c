@@ -110,11 +110,23 @@ void extract_mono_audio(const real_data_t* const demodulated_data, fir_filter_r_
 
     // Decimate by 17 in order to arrive at the final output sample rate of 44.1kHz
     const uint32_t decimation_factor = 17;
+    static float hist[16];
+    static size_t num_hist_samples = 0;
+    // TODO: This should really be part of the fir filter structure itself
+    const size_t total_num_samples = (num_hist_samples + upsampled_data.num_samples) / decimation_factor * decimation_factor;
+    const size_t samples_to_carry_over = (num_hist_samples + upsampled_data.num_samples) % decimation_factor;
+    float* accumulated_data = (float*)malloc(total_num_samples * sizeof(float));
+    memcpy(accumulated_data, hist, num_hist_samples * sizeof(float));
+    memcpy(accumulated_data + num_hist_samples, upsampled_data.samples, (total_num_samples - num_hist_samples) * sizeof(float));
+    memcpy(hist, &upsampled_data.samples[upsampled_data.num_samples - samples_to_carry_over], samples_to_carry_over * sizeof(float));
+    num_hist_samples = samples_to_carry_over;
+
     real_data_t mono_audio_data;
     mono_audio_data.sample_rate_Hz = upsampled_data.sample_rate_Hz / decimation_factor;
 
-    apply_filter_r(audio_filter, decimation_factor, upsampled_data.samples, upsampled_data.num_samples, &mono_audio_data.samples, &mono_audio_data.num_samples);
+    apply_filter_r(audio_filter, decimation_factor, accumulated_data, total_num_samples, &mono_audio_data.samples, &mono_audio_data.num_samples);
 
+    free(accumulated_data);
     destroy_real_data(&upsampled_data);
 
     // Apply deemphasis filter in order to compensate for the pre-emphasis performed on the transmit side
