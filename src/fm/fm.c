@@ -50,30 +50,53 @@ void deemphasis_filtering(const float* const input, size_t input_len, float** co
     //                                               -w_ca
     //                                           1 - -----
     //                                                2 fs
-    //            Y(z)
-    //    H(z) = ------
-    //            X(z)
+    //                               w_ca + w_ca z^-1
+    //    H(z) = ------------------------------------------------------------
+    //                                 (2 fs - w_ca) (w_ca - 2 fs)
+    //                (2 fs - w_ca) + ------------------------------ z^-1
+    //                                           2 fs + w_ca
     //
-    //    Y(z) = k_3 + k_3 * z^-1
-    //    X(x) = k_4 + k_5 * z^-1
-    //    (k_4 + k_5 * z^-1)Y(z) = (k_3 + k_3 * z^-1)X(z)
-    //    y[n] = k_3/k_4 * x[n] + k_3/k_4 * x[n-1] - k_5/k_4 * y[n-1]
+    //                Y(z)
+    //    let H(z) = ------
+    //                X(z)
     //
-    //    let tau = 75 us
-    //    let w_ca = tau^-1
+    //    Y(z) = w_ca + w_ca z^-1
+    //
+    //                            (2 fs - w_ca) (w_ca - 2 fs)
+    //    X(z) = (2 fs - w_ca) + ------------------------------ z^-1
+    //                                     2 fs + w
+    //
+    //    let k_1 = w_ca
+    //    let k_2 = 2 fs - w
+    //
+    //                (2 fs - w_ca) (w_ca - 2 fs)
+    //    let k_3 = ------------------------------
+    //                         2 fs + w
+    //
+    //    Y(z) = k_1 + k_1 z^-1
+    //    X(x) = k_2 + k_3 z^-1
+    //    (k_2 + k_3 z^-1) Y(z) = (k_1 + k_1 z^-1) X(z)
+    //    y[n] = k_1/k_2 * x[n] + k_1/k_2 * x[n-1] - k_3/k_2 * y[n-1]
+    //
+    //    let k_4 = k_1/k_2
+    //    let k_5 = k_3/k_2
+    //
+    //    let t = 75 us
+    //    let w_ca = t^-1
     //    let fs = 44.1 kHz
-    //    let k_1 = k_3/k_4 = w_ca / (2fs - w_ca)
-    //    let k_2 = k_5/k_4 = ((2fs + w_ca)(fs - w_ca)) / ((2fs - w_ca)(fs + w_ca))
     //
-    static const float k_1 = 0.17809439002671415F;
-    static const float k_2 = 0.726501592564895F;
+    //    k_4 = w_ca / (2 fs - w_ca)
+    //    k_5 = (w_ca - 2 fs) / (2fs + w_ca)
+    //
+    static const float k_4 = 0.17809439002671415F;
+    static const float k_5 = -0.7373604727511491F;
 
     *output_len = input_len;
     float* output_buffer = (float*)malloc(*output_len * sizeof(float));
     *output = output_buffer;
 
     for(size_t i = 0; i < *output_len; ++i) {
-        output_buffer[i] = k_1 * input[i] + k_1 * *prev_deemph_input - k_2 * *prev_deemph_output;
+        output_buffer[i] = k_4 * input[i] + k_4 * *prev_deemph_input - k_5 * *prev_deemph_output;
         *prev_deemph_input = input[i];
         *prev_deemph_output = output_buffer[i];
     }
