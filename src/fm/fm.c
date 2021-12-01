@@ -4,11 +4,11 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 #include "../concurrency/interconnect.h"
 #include "../concurrency/worker.h"
 #include "../dsp/fir_filter.h"
+#include "../dsp/resampler.h"
 #include "../types/iq.h"
 #include "../types/real.h"
 
@@ -91,43 +91,15 @@ void polar_discriminant(const float complex* const input, size_t input_len, floa
     }
 }
 
-void extract_mono_audio(const real_data_t* const demodulated_data, fir_filter_r_t* const audio_filter, float** const output, size_t* output_len, float* const prev_deemph_input, float* const prev_deemph_output)
+void extract_mono_audio(const real_data_t* const demodulated_data, resampler_r_t* resampler, float** const output, size_t* output_len, float* const prev_deemph_input, float* const prev_deemph_output)
 {
     if(demodulated_data->sample_rate_Hz != 250000) {
         fprintf(stderr, "Demodulated source data sample rate is expected to be 250kHz, not %uHz!", demodulated_data->sample_rate_Hz); //TODO: Handle arbitrary input sample rates
     }
 
-    // Upsample the source data by a factor of three, this will facilitate subsequent downsampling by an integer value in order to arrive at an output sample rate of 44.1kHz
-    const uint32_t interpolation_factor = 3;
-    real_data_t upsampled_data;
-    upsampled_data.sample_rate_Hz = demodulated_data->sample_rate_Hz * interpolation_factor;
-    upsampled_data.num_samples = demodulated_data->num_samples * interpolation_factor;
-    upsampled_data.samples = (float*)malloc(upsampled_data.num_samples * sizeof(float));
-    memset(upsampled_data.samples, 0, upsampled_data.num_samples * sizeof(float));
-    for(size_t i = 0; i < upsampled_data.num_samples; i += interpolation_factor) {
-        upsampled_data.samples[i] = demodulated_data->samples[i / interpolation_factor];
-    }
-
-    // Decimate by 17 in order to arrive at the final output sample rate of 44.1kHz
-    const uint32_t decimation_factor = 17;
-    static float hist[16];
-    static size_t num_hist_samples = 0;
-    // TODO: This should really be part of the fir filter structure itself
-    const size_t total_num_samples = (num_hist_samples + upsampled_data.num_samples) / decimation_factor * decimation_factor;
-    const size_t samples_to_carry_over = (num_hist_samples + upsampled_data.num_samples) % decimation_factor;
-    float* accumulated_data = (float*)malloc(total_num_samples * sizeof(float));
-    memcpy(accumulated_data, hist, num_hist_samples * sizeof(float));
-    memcpy(accumulated_data + num_hist_samples, upsampled_data.samples, (total_num_samples - num_hist_samples) * sizeof(float));
-    memcpy(hist, &upsampled_data.samples[upsampled_data.num_samples - samples_to_carry_over], samples_to_carry_over * sizeof(float));
-    num_hist_samples = samples_to_carry_over;
-
+    // Resample to 44.1kHz
     real_data_t mono_audio_data;
-    mono_audio_data.sample_rate_Hz = upsampled_data.sample_rate_Hz / decimation_factor;
-
-    apply_filter_r(audio_filter, decimation_factor, accumulated_data, total_num_samples, &mono_audio_data.samples, &mono_audio_data.num_samples);
-
-    free(accumulated_data);
-    destroy_real_data(&upsampled_data);
+    apply_resampler_r(resampler, demodulated_data, &mono_audio_data);
 
     // Apply deemphasis filter in order to compensate for the pre-emphasis performed on the transmit side
     deemphasis_filtering(mono_audio_data.samples, mono_audio_data.num_samples, output, output_len, prev_deemph_input, prev_deemph_output);
@@ -139,7 +111,7 @@ void* demodulate_fm(void* args)
     fm_demod_t* demod = (fm_demod_t*)args;
     worker_t* worker = &demod->worker;
     fir_filter_c_t* input_filter = &demod->input_filter;
-    fir_filter_r_t* audio_filter = &demod->audio_filter;
+    resampler_r_t* audio_resampler = &demod->audio_resampler;
     float complex* polar_discrim_prev_sample = &demod->polar_discrim_prev_sample;
     float* prev_deemph_input = &demod->prev_deemph_input;
     float* prev_deemph_output = &demod->prev_deemph_output;
@@ -176,7 +148,7 @@ void* demodulate_fm(void* args)
         // Extract the mono audio data
         float* mono_audio = NULL;
         size_t num_mono_samples = 0;
-        extract_mono_audio(&demodulated_data, audio_filter, &mono_audio, &num_mono_samples, prev_deemph_input, prev_deemph_output);
+        extract_mono_audio(&demodulated_data, audio_resampler, &mono_audio, &num_mono_samples, prev_deemph_input, prev_deemph_output);
 
         destroy_real_data(&demodulated_data);
 
@@ -198,7 +170,7 @@ void init_fm_demod(fm_demod_t* demod, interconnect_t* output)
     demod->prev_deemph_output = 0.0F;
 
     init_filter_c(&demod->input_filter, FIR_FILT_250kFS_100kPA_105kST, sizeof(FIR_FILT_250kFS_100kPA_105kST) / sizeof(*FIR_FILT_250kFS_100kPA_105kST));
-    init_filter_r(&demod->audio_filter, FIR_FILT_250kFS_15kPA_19kST, sizeof(FIR_FILT_250kFS_15kPA_19kST) / sizeof(*FIR_FILT_250kFS_15kPA_19kST));
+    init_resampler_r(&demod->audio_resampler, 3, 17, FIR_FILT_250kFS_15kPA_19kST, sizeof(FIR_FILT_250kFS_15kPA_19kST) / sizeof(*FIR_FILT_250kFS_15kPA_19kST));
 
     init_worker(&demod->worker, output, demodulate_fm, demod);
 }
@@ -208,5 +180,5 @@ void destroy_fm_demod(fm_demod_t* demod)
     destroy_worker(&demod->worker);
 
     destroy_filter_c(&demod->input_filter);
-    destroy_filter_r(&demod->audio_filter);
+    destroy_resampler_r(&demod->audio_resampler);
 }

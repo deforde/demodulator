@@ -6,11 +6,12 @@
 #include "../concurrency/interconnect.h"
 #include "../concurrency/worker.h"
 #include "../dsp/fir_filter.h"
+#include "../dsp/resampler.h"
 
 typedef struct
 {
     fir_filter_c_t input_filter;
-    fir_filter_r_t audio_filter;
+    resampler_r_t audio_resampler;
     float complex polar_discrim_prev_sample;
     float prev_deemph_input;
     float prev_deemph_output;
