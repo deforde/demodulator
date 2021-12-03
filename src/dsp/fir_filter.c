@@ -32,10 +32,10 @@ void apply_filter_c(fir_filter_c_t* filter, uint32_t decimation_factor, const fl
         for(int64_t input_index = input_start_index; input_index != input_end_index; ++input_index) {
             if(input_index < 0) {
                 const size_t delay_line_index = input_index + delay_line_num_samples;
-                output_buf[output_index] += taps[filter_index] * crealf(delay_line[delay_line_index]) + taps[filter_index] * cimag(delay_line[delay_line_index]) * I;
+                output_buf[output_index] += CMPLXF(taps[filter_index] * crealf(delay_line[delay_line_index]), taps[filter_index] * cimag(delay_line[delay_line_index]));
             }
             else {
-                output_buf[output_index] += taps[filter_index] * crealf(input[input_index]) + taps[filter_index] * cimag(input[input_index]) * I;
+                output_buf[output_index] += CMPLXF(taps[filter_index] * crealf(input[input_index]), taps[filter_index] * cimag(input[input_index]));
             }
             ++filter_index;
         }
