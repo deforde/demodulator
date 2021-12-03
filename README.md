@@ -1,7 +1,7 @@
 # demodulator
 Implementations of various demodulation techniques.
 
-[![CMake](https://github.com/deforde/demodulator/actions/workflows/cmake.yml/badge.svg)](https://github.com/deforde/demodulator/actions/workflows/cmake.yml)
+[![build](https://github.com/deforde/demodulator/actions/workflows/build.yml/badge.svg)](https://github.com/deforde/demodulator/actions/workflows/build.yml)
 
 Takes in source data via `.wav` files, demodulates (and, if applicable, filters, downsamples, decodes etc.) the data contained within, and writes the output to file.
 
