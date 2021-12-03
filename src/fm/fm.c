@@ -68,14 +68,14 @@ void deemphasis_filtering(const float* const input, size_t input_len, float** co
     //
     //                            (2 fs - w_ca) (w_ca - 2 fs)
     //    X(z) = (2 fs - w_ca) + ------------------------------ z^-1
-    //                                     2 fs + w
+    //                                     2 fs + w_ca
     //
     //    let k_1 = w_ca
-    //    let k_2 = 2 fs - w
+    //    let k_2 = 2 fs - w_ca
     //
     //                (2 fs - w_ca) (w_ca - 2 fs)
     //    let k_3 = ------------------------------
-    //                         2 fs + w
+    //                         2 fs + w_ca
     //
     //    Y(z) = k_1 + k_1 z^-1
     //    X(x) = k_2 + k_3 z^-1
