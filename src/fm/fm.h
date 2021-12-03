@@ -11,10 +11,18 @@
 typedef struct
 {
     fir_filter_c_t input_filter;
-    resampler_r_t audio_resampler;
+    fir_filter_r_t stereo_delta_channel_filter;
+
+    resampler_r_t mono_audio_resampler;
+    resampler_r_t stereo_audio_resampler;
+
     float complex polar_discrim_prev_sample;
-    float prev_deemph_input;
-    float prev_deemph_output;
+
+    float prev_mono_deemph_input;
+    float prev_mono_deemph_output;
+    float prev_stereo_deemph_input;
+    float prev_stereo_deemph_output;
+
     worker_t worker;
 } fm_demod_t;
 
