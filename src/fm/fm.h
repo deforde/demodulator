@@ -7,6 +7,7 @@
 #include "../concurrency/worker.h"
 #include "../dsp/fir_filter.h"
 #include "../dsp/resampler.h"
+#include "bpsk.h"
 
 typedef struct
 {
@@ -22,6 +23,8 @@ typedef struct
     float prev_mono_deemph_output;
     float prev_stereo_deemph_input;
     float prev_stereo_deemph_output;
+
+    bpsk_demod_t bpsk_demod;
 
     worker_t worker;
 } fm_demod_t;

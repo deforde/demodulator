@@ -1,5 +1,6 @@
 #include "fir_filter.h"
 
+#include <complex.h>
 #include <math.h>
 #include <string.h>
 
