@@ -14,4 +14,4 @@ add_subdirectory(src/fm)
 add_subdirectory(src/io)
 add_subdirectory(src/types)
 
-target_link_libraries(demodulator liquid fftw3 pthread m)
+target_link_libraries(demodulator liquid fftw3f pthread m)

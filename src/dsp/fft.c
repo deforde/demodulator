@@ -6,9 +6,9 @@
 void init_fft_c(fft_desc_c_t* fft, size_t len)
 {
     fft->len = len;
-    fft->output = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * fft->len);
-    fft->plan = fftw_plan_dft_1d(fft->len, fft->output, fft->output, FFTW_FORWARD, FFTW_ESTIMATE);
-    fft->scratch = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * fft->len / 2);
+    fft->output = (fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex) * fft->len);
+    fft->plan = fftwf_plan_dft_1d(fft->len, fft->output, fft->output, FFTW_FORWARD, FFTW_ESTIMATE);
+    fft->scratch = (fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex) * fft->len / 2);
 }
 
 bool execute_fft_c(fft_desc_c_t* fft, const float complex* const iq_buf, size_t num_samples)
@@ -18,29 +18,26 @@ bool execute_fft_c(fft_desc_c_t* fft, const float complex* const iq_buf, size_t 
         return false;
     }
 
-    for(size_t i = 0; i < fft->len; ++i) {
-        fft->output[i][0] = (double)crealf(iq_buf[i]);
-        fft->output[i][1] = (double)cimagf(iq_buf[i]);
-    }
+    memcpy(fft->output, iq_buf, num_samples * sizeof(float complex));
 
-    fftw_execute(fft->plan);
+    fftwf_execute(fft->plan);
 
     for(size_t i = 0; i < fft->len; ++i) {
         fft->output[i][0] /= fft->len;
         fft->output[i][1] /= fft->len;
     }
 
-    memcpy(fft->scratch, fft->output, sizeof(fftw_complex) * fft->len / 2);
-    memcpy(fft->output, &fft->output[fft->len / 2], sizeof(fftw_complex) * fft->len / 2);
-    memcpy(&fft->output[fft->len / 2], fft->scratch, sizeof(fftw_complex) * fft->len / 2);
+    memcpy(fft->scratch, fft->output, sizeof(fftwf_complex) * fft->len / 2);
+    memcpy(fft->output, &fft->output[fft->len / 2], sizeof(fftwf_complex) * fft->len / 2);
+    memcpy(&fft->output[fft->len / 2], fft->scratch, sizeof(fftwf_complex) * fft->len / 2);
 
     return true;
 }
 
 void destroy_fft_c(fft_desc_c_t* fft)
 {
-    fftw_destroy_plan(fft->plan);
-    fftw_free(fft->output);
+    fftwf_destroy_plan(fft->plan);
+    fftwf_free(fft->output);
     fft->len = 0;
     fft->output = NULL;
     fft->scratch = NULL;
@@ -49,9 +46,9 @@ void destroy_fft_c(fft_desc_c_t* fft)
 void init_fft_r(fft_desc_r_t* fft, size_t len)
 {
     fft->len = len;
-    fft->input = (double*)fftw_malloc(sizeof(double) * fft->len);
-    fft->output = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * (fft->len / 2 + 1));
-    fft->plan = fftw_plan_dft_r2c_1d(fft->len, fft->input, fft->output, FFTW_ESTIMATE);
+    fft->input = (float*)fftwf_malloc(sizeof(double) * fft->len);
+    fft->output = (fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex) * (fft->len / 2 + 1));
+    fft->plan = fftwf_plan_dft_r2c_1d(fft->len, fft->input, fft->output, FFTW_ESTIMATE);
 }
 
 bool execute_fft_r(fft_desc_r_t* fft, const float* samples, size_t num_samples)
@@ -61,11 +58,9 @@ bool execute_fft_r(fft_desc_r_t* fft, const float* samples, size_t num_samples)
         return false;
     }
 
-    for(size_t i = 0; i < fft->len; ++i) {
-        fft->input[i] = (double)samples[i];
-    }
+    memcpy(fft->input, samples, num_samples * sizeof(float));
 
-    fftw_execute(fft->plan);
+    fftwf_execute(fft->plan);
 
     for(size_t i = 0; i < fft->len / 2 + 1; ++i) {
         fft->output[i][0] /= fft->len;
@@ -77,9 +72,9 @@ bool execute_fft_r(fft_desc_r_t* fft, const float* samples, size_t num_samples)
 
 void destroy_fft_r(fft_desc_r_t* fft)
 {
-    fftw_destroy_plan(fft->plan);
-    fftw_free(fft->output);
-    fftw_free(fft->input);
+    fftwf_destroy_plan(fft->plan);
+    fftwf_free(fft->output);
+    fftwf_free(fft->input);
     fft->len = 0;
     fft->output = NULL;
     fft->input = NULL;

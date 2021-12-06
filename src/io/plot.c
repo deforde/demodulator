@@ -1,4 +1,4 @@
-#include <fftw3.h> //Needs to be included before complex.h to ensure that fftw_complex is defined
+#include <fftw3.h> //Needs to be included before complex.h to ensure that fftwf_complex is defined
 
 #include "plot.h"
 

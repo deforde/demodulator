@@ -1,7 +1,7 @@
 #ifndef FFT_H
 #define FFT_H
 
-#include <fftw3.h> //Needs to be included before complex.h to ensure that fftw_complex is defined
+#include <fftw3.h> //Needs to be included before complex.h to ensure that fftwf_complex is defined
 
 #include <complex.h>
 #include <stdbool.h>
@@ -10,17 +10,17 @@
 typedef struct
 {
     size_t len;
-    fftw_complex* output;
-    fftw_plan plan;
-    fftw_complex* scratch;
+    fftwf_complex* output;
+    fftwf_plan plan;
+    fftwf_complex* scratch;
 } fft_desc_c_t;
 
 typedef struct
 {
     size_t len;
-    double* input;
-    fftw_complex* output;
-    fftw_plan plan;
+    float* input;
+    fftwf_complex* output;
+    fftwf_plan plan;
 } fft_desc_r_t;
 
 void init_fft_c(fft_desc_c_t* fft, size_t len);
