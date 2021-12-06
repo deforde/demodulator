@@ -25,9 +25,19 @@ jobs:
         curl https://www.fftw.org/fftw-3.3.10.tar.gz -o fftw-3.3.10.tar.gz
         tar -xf fftw-3.3.10.tar.gz
         cd fftw-3.3.10
+        ./configure --enable-float --with-pic
+        make
+        sudo make install
+        
+    - name: Install liquid-dsp
+      run: |
+        git clone https://github.com/jgaeddert/liquid-dsp
+        cd liquid-dsp
+        ./bootstrap.sh
         ./configure
         make
         sudo make install
+        sudo ln /usr/local/lib/libliquid.so /usr/lib/libliquid.so        
     
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
