@@ -29,5 +29,6 @@ Check out the workflow script here: `.github/workflows/build.yml`, to get an ide
 
 ### TODO
 - Take in demodulation type and source data file as command line arguments.
-- Implement demodulation of RDS data in FM signals (WIP).
+- Improve RDS decoding (currently only extracts data from offset blocks `A` and `B`).
+- Write RDS data to file (instead of just to `stdout`).
 - Implement demodulation of other modulation types (some great source data files are available [here](https://www.sdrplay.com/iq-demo-files/)).
