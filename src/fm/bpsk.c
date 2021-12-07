@@ -2,10 +2,12 @@
 
 #include <complex.h>
 #include <math.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "../io/io.h"
+#include "../decode/diff_man.h"
+#include "../interpret/rds.h"
 #include "../types/real.h"
 
 static const float SAMPLES_PER_SYMBOL = 3.0F;
@@ -44,6 +46,10 @@ void init_bpsk_demod(bpsk_demod_t* demod)
     symsync_crcf_set_output_rate(demod->sym_sync, 1);
 
     demod->modem = modemcf_create(LIQUID_MODEM_PSK2);
+
+    init_diff_man_decoder(&demod->decoder);
+
+    init_rds_interpreter(&demod->rds);
 }
 
 void demodulate_bpsk(bpsk_demod_t* demod, const real_data_t* const input_data)
@@ -61,9 +67,10 @@ void demodulate_bpsk(bpsk_demod_t* demod, const real_data_t* const input_data)
     nco_crcf oscillator = demod->oscillator;
     symsync_crcf sym_sync = demod->sym_sync;
     modemcf modem = demod->modem;
+    diff_man_decoder_t* decoder = &demod->decoder;
+    rds_interpreter_t* rds = &demod->rds;
 
     float* resampled_data = NULL;
-    liquid_float_complex* symbols = NULL;
 
     resampled_data = (float*)malloc((size_t)ceilf(demod->resampling_ratio * input_data->num_samples) * sizeof(float));
     size_t resampled_data_index = 0;
@@ -76,9 +83,6 @@ void demodulate_bpsk(bpsk_demod_t* demod, const real_data_t* const input_data)
     const size_t total_num_resampled_samples = resampled_data_index;
 
     int decimation_ratio = TARGET_SAMPLE_RATE_HZ / bits_per_second / 2 / SAMPLES_PER_SYMBOL;
-    symbols = (liquid_float_complex*)malloc((size_t)ceilf((float)total_num_resampled_samples / decimation_ratio) * sizeof(liquid_float_complex));
-    size_t symbol_index = 0;
-
     for(size_t i = 0; i < total_num_resampled_samples; ++i) {
         liquid_float_complex input = resampled_data[i] + 0.0F * I;
         liquid_float_complex sample_baseband;
@@ -104,7 +108,12 @@ void demodulate_bpsk(bpsk_demod_t* demod, const real_data_t* const input_data)
                 float phase_error = modemcf_get_demodulator_phase_error(modem);
                 nco_crcf_pll_step(oscillator, phase_error * pll_multiplier);
 
-                symbols[symbol_index++] = sample_sym_sync;
+                const uint32_t symbol_bit = crealf(sample_sym_sync) > 0.0F ? 1 : 0;
+                uint32_t data_bit;
+                const bool data_bit_produced = decode_diff_man(decoder, symbol_bit, &data_bit);
+                if(data_bit_produced) {
+                    interpret_rds_data(rds, data_bit);
+                }
             }
         }
 
@@ -113,10 +122,6 @@ void demodulate_bpsk(bpsk_demod_t* demod, const real_data_t* const input_data)
         ++demod->sample_count;
     }
 
-    const char* output_file = "bpsk.bin";
-    write_data_to_file((void*)symbols, symbol_index * sizeof(*symbols), output_file);
-
-    free(symbols);
     free(resampled_data);
 }
 
@@ -131,4 +136,8 @@ void destroy_bpsk_demod(bpsk_demod_t* demod)
     nco_crcf_destroy(demod->oscillator);
     symsync_crcf_destroy(demod->sym_sync);
     modemcf_destroy(demod->modem);
+
+    destroy_diff_man_decoder(&demod->decoder);
+
+    destroy_rds_interpreter(&demod->rds);
 }

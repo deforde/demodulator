@@ -9,8 +9,10 @@ add_executable(demodulator "")
 
 add_subdirectory(src)
 add_subdirectory(src/concurrency)
+add_subdirectory(src/decode)
 add_subdirectory(src/dsp)
 add_subdirectory(src/fm)
+add_subdirectory(src/interpret)
 add_subdirectory(src/io)
 add_subdirectory(src/types)
 

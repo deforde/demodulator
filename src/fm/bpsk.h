@@ -4,6 +4,8 @@
 #include <liquid/liquid.h>
 #include <stdint.h>
 
+#include "../decode/diff_man.h"
+#include "../interpret/rds.h"
 #include "../types/real.h"
 
 typedef struct {
@@ -15,6 +17,8 @@ typedef struct {
     modemcf modem;
     uint64_t sample_count;
     float resampling_ratio;
+    diff_man_decoder_t decoder;
+    rds_interpreter_t rds;
 } bpsk_demod_t;
 
 void init_bpsk_demod(bpsk_demod_t* demod);
