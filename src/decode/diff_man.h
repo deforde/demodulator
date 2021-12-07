@@ -10,9 +10,9 @@
 typedef struct {
     uint32_t prev_bit;
     uint32_t clock_phase;
-    size_t num_history_bits;
     size_t bit_index;
-    uint32_t bit_history[128];
+    size_t num_transition_history_samples;
+    uint32_t transition_history[128];
 } diff_man_decoder_t;
 
 void init_diff_man_decoder(diff_man_decoder_t* decoder);
