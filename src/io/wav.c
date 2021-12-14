@@ -133,7 +133,7 @@ void* extract_sample_data(void* args)
 void init_wav_file_reader(wav_file_reader_t* wav_file_reader, interconnect_t* output, const char* const filename)
 {
     memset(wav_file_reader->filename, '\0', sizeof(wav_file_reader->filename));
-    strncpy(wav_file_reader->filename, filename, strlen(filename));
+    memcpy(wav_file_reader->filename, filename, strnlen(filename, sizeof(wav_file_reader->filename) - 1));
     init_worker(&wav_file_reader->worker, output, extract_sample_data, wav_file_reader);
 }
 
