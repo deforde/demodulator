@@ -129,7 +129,7 @@ void do_plotting_c(float complex* samples, size_t num_samples)
         }
 
         for(size_t i = 0; i < fft.len; ++i) {
-            amplitude_spectrum[i] = (float)(10 * log10(sqrt(fft.output[i][0] * fft.output[i][0] + fft.output[i][1] * fft.output[i][1]) + DBL_MIN));
+            amplitude_spectrum[i] = (float)(10 * log10(sqrtf(fft.output[i][0] * fft.output[i][0] + fft.output[i][1] * fft.output[i][1]) + DBL_MIN));
         }
 
         int ret = system("clear");
@@ -166,7 +166,7 @@ void do_plotting_r(float* const samples, size_t num_samples)
         }
 
         for(size_t i = 0; i < num_output_bins; ++i) {
-            amplitude_spectrum[i] = (float)(10 * log10(sqrt(fft.output[i][0] * fft.output[i][0] + fft.output[i][1] * fft.output[i][1]) + DBL_MIN));
+            amplitude_spectrum[i] = (float)(10 * log10(sqrtf(fft.output[i][0] * fft.output[i][0] + fft.output[i][1] * fft.output[i][1]) + DBL_MIN));
         }
 
         int ret = system("clear");

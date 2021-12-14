@@ -10,7 +10,7 @@
 #include "../interpret/rds.h"
 #include "../types/real.h"
 
-static const float SAMPLES_PER_SYMBOL = 3.0F;
+static const uint32_t SAMPLES_PER_SYMBOL = 3;
 static const float TARGET_SAMPLE_RATE_HZ = 171000.0F;
 
 void init_bpsk_demod(bpsk_demod_t* demod)
@@ -21,7 +21,7 @@ void init_bpsk_demod(bpsk_demod_t* demod)
     const float agc_initial_gain = 0.08F;
     const float low_pass_cutoff_Hz = 2400.0F;
     const float sym_sync_bandwidth_Hz = 2200.0F;
-    const float sym_sync_delay = 3.0F;
+    const uint32_t sym_sync_delay = 3;
     const float sym_sync_beta = 0.8F;
     const float pll_bandwidth_Hz = 0.01F;
 
@@ -82,7 +82,7 @@ void demodulate_bpsk(bpsk_demod_t* demod, const real_data_t* const input_data)
     }
     const size_t total_num_resampled_samples = resampled_data_index;
 
-    int decimation_ratio = TARGET_SAMPLE_RATE_HZ / bits_per_second / 2 / SAMPLES_PER_SYMBOL;
+    int decimation_ratio = (int)(TARGET_SAMPLE_RATE_HZ / bits_per_second / 2 / SAMPLES_PER_SYMBOL);
     for(size_t i = 0; i < total_num_resampled_samples; ++i) {
         liquid_float_complex input = resampled_data[i] + 0.0F * I;
         liquid_float_complex sample_baseband;
