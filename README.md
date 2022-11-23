@@ -19,8 +19,6 @@ To just build the `demodulator`, run `make`.
 
 To download, build and install (locally) the required dependencies, simply run the `build.sh` script.
 
-Alternatively, check out the workflow script here: `.github/workflows/build.yml`, to get an idea of how to go about installing the necessary dependencies manually, should you so wish.
-
 -----------------------------------------------------------
 
 ## Testing
