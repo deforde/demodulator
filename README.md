@@ -8,8 +8,8 @@ Takes in source data via `.wav` files, demodulates (and, if applicable, filters,
 -----------------------------------------------------------
 
 ## Building
-To install the required dependencies (locally, not system wide) and build `demodulator` simply run the `build.sh` script.
 To just build the `demodulator`, run `make`.
+This will automatically download and build the required 3rd party dependencies if they do not already exist.
 
 -----------------------------------------------------------
 
@@ -17,7 +17,7 @@ To just build the `demodulator`, run `make`.
 - [fftw](https://www.fftw.org/)
 - [liquid-dsp](https://github.com/jgaeddert/liquid-dsp)
 
-To download, build and install (locally) the required dependencies, simply run the `build.sh` script.
+These dependencies will be automatically downloaded and built when running `make`.
 
 -----------------------------------------------------------
 

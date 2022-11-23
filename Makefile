@@ -29,12 +29,33 @@ debug: executable
 
 executable: $(EXECUTABLE)
 
-$(EXECUTABLE): $(OBJS)
+$(EXECUTABLE): fftw liquid-dsp $(OBJS)
 	$(CC) $(OBJS) -o $@ $(LDFLAGS)
 
 $(BUILD_DIR)/%.c.o: %.c
 	mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
+
+fftw:
+	mkdir -p fftw/src && \
+	curl -L https://www.fftw.org/fftw-3.3.10.tar.gz | \
+	tar --strip-components=1 -xz -C fftw/src && \
+	cd fftw/src && \
+	PREFIX=$$(realpath ..) && \
+	./configure --prefix $$PREFIX --enable-float && \
+	make && \
+	make install
+
+liquid-dsp:
+	mkdir liquid-dsp && \
+	cd liquid-dsp && \
+	git clone https://github.com/jgaeddert/liquid-dsp src && \
+	cd src && \
+	PREFIX=$$(realpath ..) && \
+	./bootstrap.sh && \
+	./configure --prefix $$PREFIX && \
+	make && \
+	make install
 
 .PHONY: clean compdb valgrind
 
