@@ -53,4 +53,6 @@ dkms.conf
 
 build/
 *.wav
-.vscode/
+test/rds
+test/rds.zip
+test/*.bin

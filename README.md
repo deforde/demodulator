@@ -26,6 +26,12 @@ Check out the workflow script here: `.github/workflows/build.yml`, to get an ide
 
 -----------------------------------------------------------
 
+## Testing
+In the test directory is a script that will build `demodulator`, download a test file, run it through `demodulator` and playback the raw audio output.
+These tests depend on `ffplay`, which is contained in the `ffmpeg` [package](https://manpages.ubuntu.com/manpages/jammy/man1/ffplay.1.html).
+
+-----------------------------------------------------------
+
 ### TODO
 - Improve RDS decoding (currently only extracts data from offset blocks `A` and `B`).
 - Write RDS data to file (instead of just to `stdout`).
