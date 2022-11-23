@@ -5,13 +5,9 @@ IFS=$'\n\t'
 SCRIPT_DIR=$(realpath ${0%/*})
 
 cd $SCRIPT_DIR/..
-rm -rf build
-mkdir build
-cd build
-cmake ..
-cmake --build .
+make
 
-cd ../test
+cd test
 
 if [[ ! -d rds ]]; then
   curl -LO https://sdrplay.com/resources/IQ/rds.zip

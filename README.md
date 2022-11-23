@@ -8,13 +8,8 @@ Takes in source data via `.wav` files, demodulates (and, if applicable, filters,
 -----------------------------------------------------------
 
 ## Building
-Pretty much what you'd expect:
-```
-git clone https://github.com/deforde/demodulator
-cd demodulator && mkdir build && cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release
-cmake --build . --target demodulator
-```
+To install the required dependencies (locally, not system wide) and build `demodulator` simply run the `build.sh` script.
+To just build the `demodulator`, run `make`.
 
 -----------------------------------------------------------
 
@@ -22,7 +17,9 @@ cmake --build . --target demodulator
 - [fftw](https://www.fftw.org/)
 - [liquid-dsp](https://github.com/jgaeddert/liquid-dsp)
 
-Check out the workflow script here: `.github/workflows/build.yml`, to get an idea of how to go about installing the necessary dependencies.
+To download, build and install (locally) the required dependencies, simply run the `build.sh` script.
+
+Alternatively, check out the workflow script here: `.github/workflows/build.yml`, to get an idea of how to go about installing the necessary dependencies manually, should you so wish.
 
 -----------------------------------------------------------
 
