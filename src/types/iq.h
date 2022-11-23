@@ -5,13 +5,12 @@
 #include <stddef.h>
 #include <stdint.h>
 
-typedef struct
-{
-    float complex* samples;
-    size_t num_samples;
-    uint32_t sample_rate_Hz;
+typedef struct {
+  float complex *samples;
+  size_t num_samples;
+  uint32_t sample_rate_Hz;
 } iq_data_t;
 
-void destroy_iq_data(iq_data_t* iq_data);
+void destroy_iq_data(iq_data_t *iq_data);
 
-#endif //IQ_H
+#endif // IQ_H

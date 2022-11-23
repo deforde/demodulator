@@ -5,26 +5,26 @@
 #include <stdbool.h>
 
 typedef struct {
-    bool open;
-    bool available;
-    bool ready;
+  bool open;
+  bool available;
+  bool ready;
 
-    pthread_cond_t cond;
-    pthread_mutex_t mx;
+  pthread_cond_t cond;
+  pthread_mutex_t mx;
 
-    void* data;
+  void *data;
 
 } interconnect_t;
 
-void init_interconnect(interconnect_t* interconnect);
-void destroy_interconnect(interconnect_t* interconnect);
+void init_interconnect(interconnect_t *interconnect);
+void destroy_interconnect(interconnect_t *interconnect);
 
-void interconnect_lock(interconnect_t* interconnect);
-void interconnect_unlock(interconnect_t* interconnect);
+void interconnect_lock(interconnect_t *interconnect);
+void interconnect_unlock(interconnect_t *interconnect);
 
-void interconnect_wait(interconnect_t* interconnect);
-void interconnect_signal(interconnect_t* interconnect);
+void interconnect_wait(interconnect_t *interconnect);
+void interconnect_signal(interconnect_t *interconnect);
 
-void interconnect_close(interconnect_t* interconnect);
+void interconnect_close(interconnect_t *interconnect);
 
-#endif //INTERCONNECT_H
+#endif // INTERCONNECT_H
