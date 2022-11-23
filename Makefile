@@ -8,9 +8,11 @@ OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 DEPS := $(OBJS:.o=.d)
 
 INC_DIRS := $(shell find $(SRC_DIRS) -type d)
+INC_DIRS += fftw/include
+INC_DIRS += liquid-dsp/include
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
-CFLAGS := -Wall -Wextra -Wpedantic -Werror $(INC_FLAGS) -MMD -MP
+CFLAGS := -Wall -Wextra -Wpedantic -Werror -Wno-error=deprecated-declarations $(INC_FLAGS) -MMD -MP
 LDFLAGS := -Lfftw/lib -lfftw3f liquid-dsp/lib/libliquid.a.1.5 -lm
 
 EXECUTABLE := $(BUILD_DIR)/$(TARGET_EXEC)
