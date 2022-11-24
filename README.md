@@ -8,7 +8,7 @@ Takes in source data via `.wav` files, demodulates (and, if applicable, filters,
 -----------------------------------------------------------
 
 ## Building
-To just build the `demodulator`, run `make`.
+To build the `demodulator`, run `make`.
 This will automatically download and build the required 3rd party dependencies if they do not already exist.
 
 -----------------------------------------------------------
