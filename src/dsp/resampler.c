@@ -9,7 +9,7 @@
 #include "../types/real.h"
 
 void init_resampler_r(resampler_r_t *resampler, uint32_t interpolation_factor,
-                      uint32_t decimation_factor, const float *const taps,
+                      uint32_t decimation_factor, const float *taps,
                       size_t num_taps) {
   resampler->interpolation_factor = interpolation_factor;
   resampler->decimation_factor = decimation_factor;
@@ -22,8 +22,8 @@ void init_resampler_r(resampler_r_t *resampler, uint32_t interpolation_factor,
   init_filter_r(&resampler->filter, taps, num_taps);
 }
 
-void apply_resampler_r(resampler_r_t *resampler, const real_data_t *const input,
-                       real_data_t *const output) {
+void apply_resampler_r(resampler_r_t *resampler, const real_data_t *input,
+                       real_data_t *output) {
   const uint32_t interpolation_factor = resampler->interpolation_factor;
   const bool upsampling_reqiured = interpolation_factor > 1;
 
@@ -32,8 +32,7 @@ void apply_resampler_r(resampler_r_t *resampler, const real_data_t *const input,
 
   if (upsampling_reqiured) {
     stage_1_num_samples = input->num_samples * interpolation_factor;
-    stage_1_data = (float *)malloc(stage_1_num_samples * sizeof(float));
-    memset(stage_1_data, 0, stage_1_num_samples * sizeof(float));
+    stage_1_data = calloc(stage_1_num_samples, sizeof(float));
     for (size_t i = 0; i < stage_1_num_samples; i += interpolation_factor) {
       stage_1_data[i] = input->samples[i / interpolation_factor];
     }
@@ -93,7 +92,7 @@ void destroy_resampler_r(resampler_r_t *resampler) {
 }
 
 void init_resampler_c(resampler_c_t *resampler, uint32_t interpolation_factor,
-                      uint32_t decimation_factor, const float *const taps,
+                      uint32_t decimation_factor, const float *taps,
                       size_t num_taps) {
   resampler->interpolation_factor = interpolation_factor;
   resampler->decimation_factor = decimation_factor;
@@ -103,8 +102,8 @@ void init_resampler_c(resampler_c_t *resampler, uint32_t interpolation_factor,
   init_filter_c(&resampler->filter, taps, num_taps);
 }
 
-void apply_resampler_c(resampler_c_t *resampler, const iq_data_t *const input,
-                       iq_data_t *const output) {
+void apply_resampler_c(resampler_c_t *resampler, const iq_data_t *input,
+                       iq_data_t *output) {
   const uint32_t interpolation_factor = resampler->interpolation_factor;
   const bool upsampling_reqiured = interpolation_factor > 1;
 
@@ -113,9 +112,7 @@ void apply_resampler_c(resampler_c_t *resampler, const iq_data_t *const input,
 
   if (upsampling_reqiured) {
     stage_1_num_samples = input->num_samples * interpolation_factor;
-    stage_1_data =
-        (float complex *)malloc(stage_1_num_samples * sizeof(float complex));
-    memset(stage_1_data, 0, stage_1_num_samples * sizeof(float complex));
+    stage_1_data = calloc(stage_1_num_samples, sizeof(float complex));
     for (size_t i = 0; i < stage_1_num_samples; i += interpolation_factor) {
       stage_1_data[i] = input->samples[i / interpolation_factor];
     }

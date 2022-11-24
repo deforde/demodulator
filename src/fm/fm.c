@@ -452,9 +452,8 @@ void convert_data_ftos(const float *input, int16_t *output, size_t len) {
   }
 }
 
-void deemphasis_filtering(const float *input, size_t input_len,
-                          float **output, size_t *output_len,
-                          float *prev_deemph_input,
+void deemphasis_filtering(const float *input, size_t input_len, float **output,
+                          size_t *output_len, float *prev_deemph_input,
                           float *prev_deemph_output) {
   //           w_ca         1                 1 - (-1) z^-1
   //    H(z) = ---- * ----------- * --------------------------------
@@ -532,8 +531,7 @@ void polar_discriminant(const float complex *input, size_t input_len,
 }
 
 void extract_audio(const real_data_t *input, resampler_r_t *resampler,
-                   float **output, size_t *output_len,
-                   float *prev_deemph_input,
+                   float **output, size_t *output_len, float *prev_deemph_input,
                    float *prev_deemph_output) {
   real_data_t audio_data;
 
@@ -576,8 +574,7 @@ float goertzel_algorithm(uint64_t sample_rate_Hz,
 void extract_stereo_delta_audio(const real_data_t *demodulated_data,
                                 fir_filter_r_t *filter,
                                 resampler_r_t *resampler, float **output,
-                                size_t *output_len,
-                                float *prev_deemph_input,
+                                size_t *output_len, float *prev_deemph_input,
                                 float *prev_deemph_output) {
   const uint64_t pilot_tone_frequency_Hz = 19000;
   const uint64_t sample_rate_Hz = demodulated_data->sample_rate_Hz;
@@ -585,10 +582,10 @@ void extract_stereo_delta_audio(const real_data_t *demodulated_data,
   const float *const input_samples = demodulated_data->samples;
 
   real_data_t filtered_delta_channel_data = {
-    .sample_rate_Hz = demodulated_data->sample_rate_Hz,
+      .sample_rate_Hz = demodulated_data->sample_rate_Hz,
   };
   real_data_t demodulated_stereo_data = {
-    .sample_rate_Hz = demodulated_data->sample_rate_Hz,
+      .sample_rate_Hz = demodulated_data->sample_rate_Hz,
   };
 
   size_t num_carrier_samples = 0;

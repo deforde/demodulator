@@ -2,8 +2,7 @@
 
 #include <stdio.h>
 
-bool write_data_to_file(const void *const data, size_t size,
-                        const char *const filename) {
+bool write_data_to_file(const void *data, size_t size, const char *filename) {
   FILE *fp = fopen(filename, "ab");
 
   if (!fp) {

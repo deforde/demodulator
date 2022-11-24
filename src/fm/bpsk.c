@@ -58,7 +58,7 @@ void init_bpsk_demod(bpsk_demod_t *demod) {
   init_rds_interpreter(&demod->rds);
 }
 
-void demodulate_bpsk(bpsk_demod_t *demod, const real_data_t *const input_data) {
+void demodulate_bpsk(bpsk_demod_t *demod, const real_data_t *input_data) {
   if (input_data->sample_rate_Hz != 250000) {
     fprintf(stderr,
             "Source IQ data sample rate is expected to be 250kHz, not %uHz!",

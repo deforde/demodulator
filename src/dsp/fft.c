@@ -12,7 +12,7 @@ void init_fft_c(fft_desc_c_t *fft, size_t len) {
       (fftwf_complex *)fftwf_malloc(sizeof(fftwf_complex) * fft->len / 2);
 }
 
-bool execute_fft_c(fft_desc_c_t *fft, const float complex *const iq_buf,
+bool execute_fft_c(fft_desc_c_t *fft, const float complex *iq_buf,
                    size_t num_samples) {
   if (num_samples < fft->len) {
     fprintf(stderr,

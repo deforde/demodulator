@@ -16,4 +16,5 @@ fi
 
 ../build/./demodulator -f rds/*.wav -m fm
 
-ffplay -f s16le -ar 44k -ac 2 stereo_audio.bin
+# ffplay -f s16le -ar 44100 -ac 1 mono_audio.bin
+ffplay -f s16le -ar 44100 -ac 2 stereo_audio.bin

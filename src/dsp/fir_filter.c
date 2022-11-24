@@ -4,8 +4,7 @@
 #include <math.h>
 #include <string.h>
 
-void init_filter_c(fir_filter_c_t *filter, const float *const taps,
-                   size_t num_taps) {
+void init_filter_c(fir_filter_c_t *filter, const float *taps, size_t num_taps) {
   filter->taps = taps;
   filter->num_taps = num_taps;
   filter->delay_line = calloc(num_taps - 1, sizeof(float complex));
@@ -13,7 +12,7 @@ void init_filter_c(fir_filter_c_t *filter, const float *const taps,
 }
 
 void apply_filter_c(fir_filter_c_t *filter, uint32_t decimation_factor,
-                    const float complex *const input, size_t input_len,
+                    const float complex *input, size_t input_len,
                     float complex **output, size_t *output_len) {
   const float *const taps = filter->taps;
   const size_t num_taps = filter->num_taps;
@@ -64,8 +63,7 @@ void destroy_filter_c(fir_filter_c_t *filter) {
   filter->taps = NULL;
 }
 
-void init_filter_r(fir_filter_r_t *filter, const float *const taps,
-                   size_t num_taps) {
+void init_filter_r(fir_filter_r_t *filter, const float *taps, size_t num_taps) {
   filter->taps = taps;
   filter->num_taps = num_taps;
   filter->delay_line = calloc(num_taps - 1, sizeof(float));
@@ -73,7 +71,7 @@ void init_filter_r(fir_filter_r_t *filter, const float *const taps,
 }
 
 void apply_filter_r(fir_filter_r_t *filter, uint32_t decimation_factor,
-                    const float *const input, size_t input_len, float **output,
+                    const float *input, size_t input_len, float **output,
                     size_t *output_len) {
   const float *const taps = filter->taps;
   const size_t num_taps = filter->num_taps;
