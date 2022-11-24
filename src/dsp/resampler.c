@@ -14,8 +14,7 @@ void init_resampler_r(resampler_r_t *resampler, uint32_t interpolation_factor,
   resampler->interpolation_factor = interpolation_factor;
   resampler->decimation_factor = decimation_factor;
   if (decimation_factor > 1) {
-    resampler->historic_samples =
-        (float *)malloc((decimation_factor - 1) * sizeof(float));
+    resampler->historic_samples = calloc(decimation_factor - 1, sizeof(float));
   } else {
     resampler->historic_samples = NULL;
   }

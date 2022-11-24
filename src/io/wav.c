@@ -93,10 +93,8 @@ void *extract_sample_data(void *args) {
         total_bytes_read += bytes_read;
         chunk_data_remaining -= size_to_read;
 
-        void *iq_struct_buf = malloc(sizeof(iq_data_t));
+        void *iq_struct_buf = calloc(1, sizeof(iq_data_t));
         iq_data_t *iq_data = (iq_data_t *)iq_struct_buf;
-        iq_data->samples = NULL;
-        iq_data->num_samples = 0;
         iq_data->sample_rate_Hz = wav_header.sample_rate_Hz;
 
         const size_t num_samples = bytes_read / sample_size;
@@ -137,7 +135,7 @@ void *extract_sample_data(void *args) {
 }
 
 void init_wav_file_reader(wav_file_reader_t *wav_file_reader,
-                          interconnect_t *output, const char *const filename) {
+                          interconnect_t *output, const char *filename) {
   memset(wav_file_reader->filename, '\0', sizeof(wav_file_reader->filename));
   memcpy(wav_file_reader->filename, filename,
          strnlen(filename, sizeof(wav_file_reader->filename) - 1));

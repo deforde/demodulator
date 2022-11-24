@@ -44,7 +44,7 @@ float peak_hold(float const *ampl, size_t len) {
 }
 
 float mean(float const *ampl, size_t len) {
-  float peak = 0.0F;
+  float peak = 0.0f;
   for (size_t i = 0; i < len; ++i) {
     peak += ampl[i];
   }

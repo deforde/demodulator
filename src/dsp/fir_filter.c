@@ -8,8 +8,7 @@ void init_filter_c(fir_filter_c_t *filter, const float *const taps,
                    size_t num_taps) {
   filter->taps = taps;
   filter->num_taps = num_taps;
-  filter->delay_line =
-      (float complex *)malloc((num_taps - 1) * sizeof(float complex));
+  filter->delay_line = calloc(num_taps - 1, sizeof(float complex));
   filter->delay_line_num_samples = 0;
 }
 
@@ -36,7 +35,7 @@ void apply_filter_c(fir_filter_c_t *filter, uint32_t decimation_factor,
         -delay_line_num_samples + output_index * decimation_factor;
     const int64_t input_end_index = input_start_index + num_taps;
     size_t filter_index = 0;
-    output_buf[output_index] = 0.0F + 0.0F * I;
+    output_buf[output_index] = 0.0f + 0.0f * I;
     for (int64_t input_index = input_start_index;
          input_index != input_end_index; ++input_index) {
       if (input_index < 0) {
@@ -69,7 +68,7 @@ void init_filter_r(fir_filter_r_t *filter, const float *const taps,
                    size_t num_taps) {
   filter->taps = taps;
   filter->num_taps = num_taps;
-  filter->delay_line = (float *)malloc((num_taps - 1) * sizeof(float));
+  filter->delay_line = calloc(num_taps - 1, sizeof(float));
   filter->delay_line_num_samples = 0;
 }
 
@@ -95,7 +94,7 @@ void apply_filter_r(fir_filter_r_t *filter, uint32_t decimation_factor,
         -delay_line_num_samples + output_index * decimation_factor;
     const int64_t input_end_index = input_start_index + num_taps;
     size_t filter_index = 0;
-    output_buf[output_index] = 0.0F;
+    output_buf[output_index] = 0.0f;
     for (int64_t input_index = input_start_index;
          input_index != input_end_index; ++input_index) {
       if (input_index < 0) {
